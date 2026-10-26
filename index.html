@@ -445,6 +445,7 @@
       .meta-grid th,
       .meta-grid td {
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
         width: 100% !important;
         min-width: 0 !important;
@@ -555,16 +556,28 @@
       }
     }
 
-    /* スマホ画面では固定列（工程名）の幅をスリム化し、右側チャート表示領域を広く確保 */
-    @media (max-width: 768px) {
-      .col-name { width: 124px; }
-      .col-start { width: 98px; }
-      .col-end { width: 98px; }
-      .col-days { width: 44px; }
-      .col-term { width: calc((100% - 364px) / 18); }
-      .task-name-cell { padding: 2px 4px !important; }
-      .task-name-input { font-size: 0.76rem; padding: 2px 1px; }
-      .delete-row-btn { font-size: 0.75rem; padding: 1px 2px; }
+    /* スマホ画面では固定列（工程名）と日付列をスリム化し、日付見切れ防止＆右側チャート表示領域を広く確保 */
+    @media screen and (max-width: 768px) {
+      .col-name { width: 108px; }
+      .col-start { width: 72px; }
+      .col-end { width: 72px; }
+      .col-days { width: 34px; }
+      .col-term { width: calc((100% - 286px) / 18); }
+      .task-name-cell { padding: 2px 3px !important; }
+      .task-name-input { font-size: 0.74rem; padding: 2px 1px; }
+      .delete-row-btn { font-size: 0.72rem; padding: 1px 2px; }
+      .gantt-table .date-input::-webkit-calendar-picker-indicator {
+        display: none !important;
+        -webkit-appearance: none;
+      }
+      .gantt-table .date-input {
+        font-size: 0.68rem;
+        padding: 2px 0;
+        letter-spacing: -0.03em;
+      }
+      .days-cell {
+        font-size: 0.7rem;
+      }
     }
 
     .task-name-wrapper {
@@ -1673,7 +1686,7 @@
       gap: 4px;
     }
 
-    @media (max-width: 768px) {
+    @media screen and (max-width: 768px) {
       .cloud-sync-bar {
         padding: 7px 8px;
         gap: 6px;
@@ -1681,14 +1694,22 @@
       .cloud-bar-left,
       .cloud-bar-right {
         width: 100%;
-        justify-content: space-between;
+        justify-content: flex-start;
+        gap: 5px;
       }
       .project-picker-btn {
+        flex: 1 1 calc(100% - 44px);
+        min-width: 0;
+        max-width: calc(100% - 44px);
+        overflow: hidden;
+        font-size: 0.8rem;
+        padding: 6px 8px;
+        justify-content: space-between;
+      }
+      .project-picker-name {
         flex: 1;
         min-width: 0;
-        max-width: none;
-        font-size: 0.8rem;
-        padding: 5px 8px;
+        text-align: left;
       }
       .btn-cloud {
         font-size: 0.74rem;
@@ -1722,8 +1743,8 @@
     </div>
     <div class="cloud-bar-right">
       <span id="cloudSyncStatusBadge" class="cloud-status-pill" onclick="openCloudSettingsModal()" style="cursor:pointer;">⚪ 端末保存（クラウド未設定）</span>
-      <button type="button" class="btn-cloud btn-cloud-solid" onclick="syncToCloudNow(true)" title="現在の現場データをGoogleスプレッドシートへ保存します">☁️ クラウド保存</button>
-      <button type="button" class="btn-cloud" onclick="pullFromCloudNow(true)" title="Googleスプレッドシートから最新の現場データを読み込みます">🔄 最新読込</button>
+      <button type="button" id="btnCloudSaveMain" class="btn-cloud btn-cloud-solid" onclick="syncToCloudNow(true)" title="現在の現場データをGoogleスプレッドシートへ手動保存します（確認ポップアップが出ます）">☁️ クラウド保存</button>
+      <button type="button" class="btn-cloud" onclick="pullFromCloudNow(true)" title="Googleスプレッドシートから最新の現場データを読み込みます（確認ポップアップが出ます）">🔄 最新読込</button>
       <button type="button" class="btn-cloud btn-cloud-solid" onclick="openCloudSettingsModal()" title="Googleスプレッドシート連携・スマホQRコード・アプリアイコン設定を開きます">⚙️ アプリ・クラウド設定</button>
     </div>
   </div>
@@ -1830,8 +1851,8 @@
         <tr>
           <th>全体工期</th>
           <td>
-            <input type="text" class="meta-input" id="metaPeriod" value="" placeholder="例：R8.10.1 ～ R9.1.30" oninput="onMetaPeriodTextChange(this.value)">
-            <div class="no-print" style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin-top:3px; padding-top:3px; border-top:1px dashed #E2E8F0;">
+            <input type="text" class="meta-input" id="metaPeriod" value="" placeholder="例：R8.10.1 ～ R9.1.30" oninput="onMetaPeriodTextChange(this.value)" style="width:100%;">
+            <div class="no-print" style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; width:100%; margin-top:3px; padding-top:3px; border-top:1px dashed #E2E8F0;">
               <span style="font-size:0.7rem; color:#475569; font-weight:bold;">📅 カレンダー選択：</span>
               <input type="date" id="metaPeriodStartPicker" class="date-input" style="width:auto; font-size:0.74rem; border:1px solid #CBD5E1; background:#F8FAFC; padding:1px 4px;" onchange="onPeriodDatePickerChange()" title="全体工期の着工日を選ぶと、工程表と日別カレンダーの開始月も自動連動します">
               <span style="font-size:0.72rem; color:#64748B;">～</span>
@@ -3790,8 +3811,31 @@
       autoSync: true
     };
     let isApplyingRemoteState = false;
+    let isInitialLoadPhase = true;
+    let hasUnsavedCloudChanges = false;
     let autoSyncTimer = null;
     let generatedAppIconDataUrl = "";
+
+    function setUnsavedCloudChangesState(isDirty) {
+      hasUnsavedCloudChanges = Boolean(isDirty);
+      const saveBtn = document.getElementById("btnCloudSaveMain");
+      if (hasUnsavedCloudChanges) {
+        setCloudStatusBadge("🟠 未保存の変更あり（「☁️ クラウド保存」を押して反映）", "#D97706");
+        if (saveBtn) {
+          saveBtn.style.background = "#EA580C";
+          saveBtn.style.color = "#FFFFFF";
+          saveBtn.style.borderColor = "#FDBA74";
+          saveBtn.textContent = "☁️ クラウド保存（未反映）";
+        }
+      } else {
+        if (saveBtn) {
+          saveBtn.style.background = "";
+          saveBtn.style.color = "";
+          saveBtn.style.borderColor = "";
+          saveBtn.textContent = "☁️ クラウド保存";
+        }
+      }
+    }
 
     function buildBlankTemplateState(projectNameStr) {
       const now = new Date();
@@ -3834,8 +3878,62 @@
         displayMode: "continuous",
         calShowGanttTags: true,
         tasks: JSON.parse(JSON.stringify(iwazawaPresetTasks)),
-        dailyRecords: {},
-        meetings: [],
+        dailyRecords: {
+          "2026-10-21": {
+            weather: "",
+            workNote: "",
+            events: [
+              { type: "inspect", text: "お施主様 現場打合せ・確認", arranged: true }
+            ],
+            ninku: { "大工": 3 }
+          },
+          "2026-10-22": {
+            weather: "☀️",
+            workNote: "",
+            events: [],
+            ninku: { "大工": 3 }
+          },
+          "2026-10-23": {
+            weather: "☁️",
+            workNote: "",
+            events: [],
+            ninku: { "大工": 1 }
+          },
+          "2026-10-24": {
+            weather: "☔",
+            workNote: "",
+            events: [],
+            ninku: { "大工": 2, "給排水設備": 1 }
+          },
+          "2026-10-25": {
+            weather: "",
+            workNote: "",
+            events: [],
+            ninku: { "給排水設備": 1 }
+          },
+          "2026-10-26": {
+            weather: "☁️",
+            workNote: "",
+            events: [],
+            ninku: { "大工": 1 }
+          }
+        },
+        meetings: [
+          {
+            id: 1729500001,
+            date: "2026-10-21",
+            category: "建具・木工",
+            content: "トイレの扉開き勝手変更",
+            told: true
+          },
+          {
+            id: 1729500002,
+            date: "2026-10-21",
+            category: "建具・木工",
+            content: "玄関上り框の3枚引込戸不採用",
+            told: true
+          }
+        ],
         photoChecks: JSON.parse(JSON.stringify(DEFAULT_PHOTO_CHECKS))
       };
     }
@@ -3932,13 +4030,9 @@
         renderProjectSelector();
         updateTabBadges();
 
-        // クラウド自動同期がONの場合はデバウンスして自動保存
-        if (!isApplyingRemoteState && cloudConfig.gasUrl && cloudConfig.autoSync) {
-          setCloudStatusBadge("🟠 自動保存待機中...", "#D97706");
-          clearTimeout(autoSyncTimer);
-          autoSyncTimer = setTimeout(() => {
-            syncToCloudNow(false);
-          }, 2000);
+        // 自動クラウド保存は行わず、「未保存の変更あり」として手動保存ボタンをハイライト
+        if (!isApplyingRemoteState && !isInitialLoadPhase && cloudConfig.gasUrl) {
+          setUnsavedCloudChangesState(true);
         }
       } catch (e) {
         console.warn("保存スキップ:", e);
@@ -3953,16 +4047,28 @@
           const parsedStore = JSON.parse(rawProjects);
           if (parsedStore && parsedStore.projects && Object.keys(parsedStore.projects).length > 0) {
             projectsStore = parsedStore;
+            // 岩澤様邸の日別データ・打合せが空で上書きされていた場合は復元データを補完
+            const iwa = projectsStore.projects["proj_iwazawa"];
+            if (iwa && iwa.state) {
+              const presetIwa = buildIwazawaInitialState();
+              if (!iwa.state.dailyRecords || Object.keys(iwa.state.dailyRecords).length === 0) {
+                iwa.state.dailyRecords = presetIwa.dailyRecords;
+              }
+              if (!Array.isArray(iwa.state.meetings) || iwa.state.meetings.length === 0) {
+                iwa.state.meetings = presetIwa.meetings;
+              }
+            }
             // 白紙テンプレート現場がなければ追加しておく
             if (!projectsStore.projects["proj_template"]) {
               projectsStore.projects["proj_template"] = {
                 projectId: "proj_template",
                 projectName: "✨ 新規工事（白紙テンプレート）",
                 archived: false,
-                updatedAt: "2026-01-01T00:00:00.000Z",
+                updatedAt: "2000-01-01T00:00:00.000Z",
                 state: buildBlankTemplateState("")
               };
             }
+            localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(projectsStore));
             currentProjectId = parsedStore.currentProjectId || Object.keys(parsedStore.projects)[0];
             const activeProj = projectsStore.projects[currentProjectId] || Object.values(parsedStore.projects)[0];
             if (activeProj && activeProj.state) {
@@ -3974,18 +4080,8 @@
           }
         }
 
-        // 初回構築時：白紙テンプレートと岩澤様邸データの両方を現場リストに用意
+        // 初回構築時：白紙テンプレートと岩澤様邸データの両方を現場リストに用意（初期時刻は2000年に設定しクラウド上書きを防止）
         let iwazawaState = buildIwazawaInitialState();
-        const rawLegacy = localStorage.getItem(STORAGE_KEY);
-        if (rawLegacy) {
-          try {
-            const parsedLegacy = JSON.parse(rawLegacy);
-            if (parsedLegacy && Array.isArray(parsedLegacy.tasks) && parsedLegacy.tasks.length > 0) {
-              iwazawaState = parsedLegacy;
-            }
-          } catch (e) {}
-        }
-
         const blankState = buildBlankTemplateState("");
         currentProjectId = "proj_iwazawa";
         projectsStore = {
@@ -3995,14 +4091,14 @@
               projectId: "proj_iwazawa",
               projectName: iwazawaState.meta?.projectName || "岩澤様邸リノベーション工事",
               archived: false,
-              updatedAt: new Date().toISOString(),
+              updatedAt: "2000-01-01T00:00:00.000Z",
               state: iwazawaState
             },
             proj_template: {
               projectId: "proj_template",
               projectName: "✨ 新規工事（白紙テンプレート）",
               archived: false,
-              updatedAt: "2026-01-01T00:00:00.000Z",
+              updatedAt: "2000-01-01T00:00:00.000Z",
               state: blankState
             }
           }
@@ -5117,21 +5213,28 @@
       }
     }
 
-    async function syncToCloudNow(showNotification) {
+    async function syncToCloudNow(askConfirm) {
       if (!cloudConfig.gasUrl) {
-        if (showNotification) openCloudSettingsModal();
-        return;
-      }
-      if (currentProjectId === "proj_template" && !showNotification) {
+        openCloudSettingsModal();
         return;
       }
 
       saveState();
+      const currentProj = projectsStore.projects[currentProjectId];
+      const projTitle = currentProj?.projectName || "現在の現場";
+
+      if (askConfirm !== false) {
+        const ok = confirm(
+          `☁️ クラウド保存の確認\n\n` +
+          `現在の「${projTitle}」の画面内容で、クラウド（Googleスプレッドシート）を上書き保存してよろしいですか？`
+        );
+        if (!ok) return;
+      }
+
       clearTimeout(autoSyncTimer);
       setCloudStatusBadge("🟡 クラウド保存中...", "#D97706");
 
       try {
-        const currentProj = projectsStore.projects[currentProjectId];
         const data = await postToGasCloud(cloudConfig.gasUrl, {
           action: "saveProject",
           passcode: cloudConfig.passcode || "",
@@ -5142,27 +5245,31 @@
           throw new Error(data?.error || "保存エラー");
         }
 
+        setUnsavedCloudChangesState(false);
         const nowStr = new Date().toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
-        setCloudStatusBadge(`🟢 クラウド同期済 (${nowStr})`, "#15803D");
-        if (showNotification) {
-          showToast(`☁️「${currentProj.projectName}」をGoogleスプレッドシートへ保存しました`);
-        }
+        setCloudStatusBadge(`🟢 クラウド保存済 (${nowStr})`, "#15803D");
+        showToast(`☁️「${projTitle}」をGoogleスプレッドシートへ保存しました！`);
       } catch (err) {
         console.warn("クラウド保存エラー:", err);
-        setCloudStatusBadge("🔴 オフライン（端末に保存済）", "#DC2626");
-        if (showNotification) {
-          showToast("⚠️ クラウド通信に失敗しました（端末内には保存されています）");
-        }
+        setCloudStatusBadge("🔴 クラウド通信エラー（端末には保存済）", "#DC2626");
+        showToast("⚠️ クラウド保存に失敗しました（端末内には保存されています）");
       }
     }
 
-    async function pullFromCloudNow(showNotification) {
+    async function pullFromCloudNow(isManualClick) {
       if (!cloudConfig.gasUrl) {
-        if (showNotification) openCloudSettingsModal();
+        if (isManualClick) openCloudSettingsModal();
         return;
       }
 
-      setCloudStatusBadge("🟡 最新データ取得中...", "#0284C7");
+      if (isManualClick) {
+        const msg = hasUnsavedCloudChanges
+          ? "⚠️ まだクラウド保存していない変更が画面にあります。\n\nクラウド（Googleスプレッドシート）のデータを読み込んで、現在の画面を上書き更新してもよろしいですか？"
+          : "🔄 クラウド読込の確認\n\nクラウド（Googleスプレッドシート）から最新データを読み込んで画面に反映しますか？\n（※「キャンセル」を選ぶと今の画面のまま維持されます）";
+        if (!confirm(msg)) return;
+      }
+
+      setCloudStatusBadge("🟡 クラウドデータ確認中...", "#0284C7");
 
       try {
         const data = await postToGasCloud(cloudConfig.gasUrl, {
@@ -5175,7 +5282,28 @@
         }
 
         if (Array.isArray(data.projects) && data.projects.length > 0) {
-          // 明示的に読込ボタンを押した場合はクラウド側データを優先反映
+          if (!isManualClick) {
+            // 起動時・リロード時（F5 / スマホリロード時）：クラウド側と現在画面に差分がある場合は必ず確認ポップアップを出す
+            const remoteCurrent = data.projects.find(rp => rp && rp.projectId === currentProjectId) || data.projects[0];
+            const localCurrent = projectsStore.projects[currentProjectId];
+            const remoteJson = remoteCurrent ? JSON.stringify(remoteCurrent.state) : "";
+            const localJson = localCurrent ? JSON.stringify(localCurrent.state) : "";
+
+            if (remoteJson && remoteJson !== localJson) {
+              const applyOk = confirm(
+                `🔄 クラウドデータの読込確認\n\n` +
+                `クラウド（Googleスプレッドシート）上に保存されているデータがあります。\n` +
+                `クラウドの最新データを画面に読み込みますか？\n\n` +
+                `・[OK] ＝ クラウドのデータを画面に反映する\n` +
+                `・[キャンセル] ＝ 今の端末の画面データをそのまま残す`
+              );
+              if (!applyOk) {
+                setCloudStatusBadge("⚪ 端末データを表示中（手動保存待機）", "rgba(15, 23, 42, 0.45)");
+                return;
+              }
+            }
+          }
+
           data.projects.forEach(rp => {
             if (rp && rp.projectId && rp.state) {
               projectsStore.projects[rp.projectId] = rp;
@@ -5196,15 +5324,16 @@
           }
         }
 
+        setUnsavedCloudChangesState(false);
         const nowStr = new Date().toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
         setCloudStatusBadge(`🟢 クラウド同期済 (${nowStr})`, "#15803D");
-        if (showNotification) {
+        if (isManualClick) {
           showToast("🔄 Googleスプレッドシートから最新データを読み込みました！");
         }
       } catch (err) {
         console.warn("クラウド読込エラー:", err);
         setCloudStatusBadge("🔴 オフライン（端末データを表示中）", "#DC2626");
-        if (showNotification) {
+        if (isManualClick) {
           showToast("⚠️ クラウドからの取得に失敗しました");
         }
       }
@@ -5436,17 +5565,20 @@
       renderSummaryAndLine();
       updateTabBadges();
 
-      // クラウド設定済みの場合は起動時に最新データを自動取得
-      if (cloudConfig.gasUrl && cloudConfig.autoSync) {
-        pullFromCloudNow(false);
-      }
+      isInitialLoadPhase = false;
 
-      // スマホ・タブレットで別アプリから戻ってきた際にも最新データを自動チェック
-      document.addEventListener("visibilitychange", () => {
-        if (document.visibilityState === "visible" && cloudConfig.gasUrl && cloudConfig.autoSync) {
-          pullFromCloudNow(false);
+      // 未保存の変更がある状態でF5キーやスマホのリロード・タブ閉鎖を行った際に確認ポップアップを表示
+      window.addEventListener("beforeunload", (e) => {
+        if (hasUnsavedCloudChanges) {
+          e.preventDefault();
+          e.returnValue = "";
         }
       });
+
+      // 起動・リロード時にクラウドデータをチェック（差分がある場合は確認ポップアップを出してから反映）
+      if (cloudConfig.gasUrl) {
+        pullFromCloudNow(false);
+      }
 
       let resizeTimer = null;
       window.addEventListener("resize", () => {

@@ -1,0 +1,17 @@
+{
+  "name": "長友ホーム 工程管理ツール",
+  "short_name": "工程管理",
+  "description": "(株)長友ホーム 全体工程表・日別カレンダー・人工・打合せ管理アプリ",
+  "start_url": "./?pass=0157",
+  "display": "standalone",
+  "background_color": "#0F6835",
+  "theme_color": "#17924C",
+  "icons": [
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

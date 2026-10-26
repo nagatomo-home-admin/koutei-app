@@ -4009,20 +4009,39 @@
 
     let activeProjectModalTab = "active"; // 'active' | 'archived'
 
+    function formatTimestampForPopup(isoStr) {
+      if (!isoStr || String(isoStr).startsWith("2000-01-01")) {
+        return "初期状態（未編集）";
+      }
+      const d = new Date(isoStr);
+      if (isNaN(d.getTime())) return String(isoStr);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      const hh = String(d.getHours()).padStart(2, "0");
+      const mm = String(d.getMinutes()).padStart(2, "0");
+      const ss = String(d.getSeconds()).padStart(2, "0");
+      return `${y}/${m}/${day} ${hh}:${mm}:${ss}`;
+    }
+
     function saveState() {
       try {
         const state = getCurrentStateObject();
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 
         const projName = (state.meta.projectName || "✨ 新規工事（名称未設定）").trim();
-        const nowIso = new Date().toISOString();
         const existingEntry = projectsStore.projects[currentProjectId] || {};
+        const isUserEdit = (!isApplyingRemoteState && !isInitialLoadPhase);
+        const updatedIso = isUserEdit
+          ? new Date().toISOString()
+          : (existingEntry.updatedAt || "2000-01-01T00:00:00.000Z");
+
         projectsStore.currentProjectId = currentProjectId;
         projectsStore.projects[currentProjectId] = {
           projectId: currentProjectId,
           projectName: projName,
           archived: Boolean(existingEntry.archived),
-          updatedAt: nowIso,
+          updatedAt: updatedIso,
           state: state
         };
         localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(projectsStore));
@@ -4031,7 +4050,7 @@
         updateTabBadges();
 
         // 自動クラウド保存は行わず、「未保存の変更あり」として手動保存ボタンをハイライト
-        if (!isApplyingRemoteState && !isInitialLoadPhase && cloudConfig.gasUrl) {
+        if (isUserEdit && cloudConfig.gasUrl) {
           setUnsavedCloudChangesState(true);
         }
       } catch (e) {
@@ -5219,17 +5238,61 @@
         return;
       }
 
-      saveState();
       const currentProj = projectsStore.projects[currentProjectId];
-      const projTitle = currentProj?.projectName || "現在の現場";
+      if (!currentProj) return;
+      const projTitle = currentProj.projectName || "現在の現場";
 
       if (askConfirm !== false) {
+        setCloudStatusBadge("🟡 クラウド側の日時を確認中...", "#0284C7");
+        let remoteUpdatedAt = null;
+        try {
+          const checkData = await postToGasCloud(cloudConfig.gasUrl, {
+            action: "loadAll",
+            passcode: cloudConfig.passcode || ""
+          });
+          if (checkData && checkData.ok && Array.isArray(checkData.projects)) {
+            const rp = checkData.projects.find(p => p && p.projectId === currentProjectId);
+            if (rp && rp.updatedAt) remoteUpdatedAt = rp.updatedAt;
+          }
+        } catch (e) {}
+
+        const localTimeMs = new Date(currentProj.updatedAt || 0).getTime();
+        const remoteTimeMs = remoteUpdatedAt ? new Date(remoteUpdatedAt).getTime() : 0;
+        const localDateStr = formatTimestampForPopup(currentProj.updatedAt);
+        const remoteDateStr = remoteUpdatedAt ? formatTimestampForPopup(remoteUpdatedAt) : "クラウド上に未保存（新規）";
+
+        let judgeLine = "👉 判定：💻 この端末（本体）のデータの方が新しいです";
+        if (remoteTimeMs > 0) {
+          if (localTimeMs < remoteTimeMs) {
+            judgeLine = "⚠️ 注意：☁️ クラウド側のデータの方が新しい日時になっています！";
+          } else if (Math.abs(localTimeMs - remoteTimeMs) < 1000) {
+            judgeLine = "👉 判定：💻 本体と ☁️ クラウドは同じ日時です";
+          }
+        }
+
         const ok = confirm(
-          `☁️ クラウド保存の確認\n\n` +
-          `現在の「${projTitle}」の画面内容で、クラウド（Googleスプレッドシート）を上書き保存してよろしいですか？`
+          `☁️ クラウド保存（上書き）の確認\n` +
+          `【現場名】${projTitle}\n\n` +
+          `💻 この端末（本体）日時：${localDateStr}\n` +
+          `☁️ クラウドのデータ日時：${remoteDateStr}\n` +
+          `${judgeLine}\n\n` +
+          `現在の画面内容でクラウド（Googleスプレッドシート）を上書き保存してよろしいですか？`
         );
-        if (!ok) return;
+        if (!ok) {
+          if (hasUnsavedCloudChanges) {
+            setUnsavedCloudChangesState(true);
+          } else {
+            setCloudStatusBadge("🟢 クラウド保存キャンセル", "#15803D");
+          }
+          return;
+        }
       }
+
+      // 保存実行時に最新の現在時刻を付与して保存
+      const saveIso = new Date().toISOString();
+      currentProj.updatedAt = saveIso;
+      currentProj.state = getCurrentStateObject();
+      localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(projectsStore));
 
       clearTimeout(autoSyncTimer);
       setCloudStatusBadge("🟡 クラウド保存中...", "#D97706");
@@ -5262,13 +5325,6 @@
         return;
       }
 
-      if (isManualClick) {
-        const msg = hasUnsavedCloudChanges
-          ? "⚠️ まだクラウド保存していない変更が画面にあります。\n\nクラウド（Googleスプレッドシート）のデータを読み込んで、現在の画面を上書き更新してもよろしいですか？"
-          : "🔄 クラウド読込の確認\n\nクラウド（Googleスプレッドシート）から最新データを読み込んで画面に反映しますか？\n（※「キャンセル」を選ぶと今の画面のまま維持されます）";
-        if (!confirm(msg)) return;
-      }
-
       setCloudStatusBadge("🟡 クラウドデータ確認中...", "#0284C7");
 
       try {
@@ -5282,25 +5338,46 @@
         }
 
         if (Array.isArray(data.projects) && data.projects.length > 0) {
-          if (!isManualClick) {
-            // 起動時・リロード時（F5 / スマホリロード時）：クラウド側と現在画面に差分がある場合は必ず確認ポップアップを出す
-            const remoteCurrent = data.projects.find(rp => rp && rp.projectId === currentProjectId) || data.projects[0];
-            const localCurrent = projectsStore.projects[currentProjectId];
-            const remoteJson = remoteCurrent ? JSON.stringify(remoteCurrent.state) : "";
-            const localJson = localCurrent ? JSON.stringify(localCurrent.state) : "";
+          const remoteCurrent = data.projects.find(rp => rp && rp.projectId === currentProjectId) || data.projects[0];
+          const localCurrent = projectsStore.projects[currentProjectId];
+          const remoteJson = remoteCurrent ? JSON.stringify(remoteCurrent.state) : "";
+          const localJson = localCurrent ? JSON.stringify(localCurrent.state) : "";
 
-            if (remoteJson && remoteJson !== localJson) {
-              const applyOk = confirm(
-                `🔄 クラウドデータの読込確認\n\n` +
-                `クラウド（Googleスプレッドシート）上に保存されているデータがあります。\n` +
-                `クラウドの最新データを画面に読み込みますか？\n\n` +
-                `・[OK] ＝ クラウドのデータを画面に反映する\n` +
-                `・[キャンセル] ＝ 今の端末の画面データをそのまま残す`
-              );
-              if (!applyOk) {
+          const remoteTimeMs = new Date(remoteCurrent?.updatedAt || 0).getTime();
+          const localTimeMs = new Date(localCurrent?.updatedAt || 0).getTime();
+          const remoteDateStr = formatTimestampForPopup(remoteCurrent?.updatedAt);
+          const localDateStr = formatTimestampForPopup(localCurrent?.updatedAt);
+          const projTitle = remoteCurrent?.projectName || localCurrent?.projectName || "現在の現場";
+
+          let judgeLine = "👉 判定：☁️ クラウドのデータの方が新しいです";
+          if (localTimeMs > remoteTimeMs) {
+            judgeLine = "⚠️ 注意：💻 この端末（本体）のデータの方が新しい日時です！";
+          } else if (Math.abs(remoteTimeMs - localTimeMs) < 1000) {
+            judgeLine = "👉 判定：☁️ クラウドと 💻 本体は同じ日時です";
+          }
+          if (hasUnsavedCloudChanges) {
+            judgeLine = "⚠️ 注意：💻 この端末にはまだクラウド保存していない変更があります！";
+          }
+
+          // 手動で「🔄 最新読込」を押したとき、または起動・リロード時にデータ差分があるときは日時比較つき確認ポップアップを表示
+          if (isManualClick || (remoteJson && remoteJson !== localJson)) {
+            const applyOk = confirm(
+              `🔄 クラウドデータの読込確認\n` +
+              `【現場名】${projTitle}\n\n` +
+              `☁️ クラウドのデータ日時：${remoteDateStr}\n` +
+              `💻 この端末（本体）日時：${localDateStr}\n` +
+              `${judgeLine}\n\n` +
+              `クラウドのデータを画面に読み込みますか？\n` +
+              `・[OK] ＝ クラウドのデータを画面に反映する\n` +
+              `・[キャンセル] ＝ 今の本体の画面データをそのまま残す`
+            );
+            if (!applyOk) {
+              if (hasUnsavedCloudChanges) {
+                setUnsavedCloudChangesState(true);
+              } else {
                 setCloudStatusBadge("⚪ 端末データを表示中（手動保存待機）", "rgba(15, 23, 42, 0.45)");
-                return;
               }
+              return;
             }
           }
 

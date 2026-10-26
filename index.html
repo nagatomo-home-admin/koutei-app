@@ -1725,6 +1725,190 @@
         padding-top: 6px;
       }
     }
+  
+    /* ==========================================================================
+       工程表の予定バー（7曜カレンダー横バー ＆ スマホ縦リスト縦バー）
+       ========================================================================== */
+    .cal-gantt-bars-container {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin: 2px 0 3px 0;
+      width: 100%;
+      min-width: 0;
+    }
+    .cal-gantt-h-bar {
+      font-size: 0.66rem;
+      line-height: 1.35;
+      padding: 1.5px 5px;
+      font-weight: bold;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+      letter-spacing: -0.2px;
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      cursor: pointer;
+    }
+    .cal-gantt-h-more {
+      font-size: 0.6rem;
+      color: var(--text-sub);
+      font-weight: bold;
+      padding: 0 2px;
+    }
+
+    /* スマホ縦リスト用 縦バー帯 */
+    .cal-gantt-vbars-container {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin: 4px 0 6px 0;
+      width: 100%;
+      min-width: 0;
+    }
+    .cal-gantt-v-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.84rem;
+      font-weight: bold;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+      box-sizing: border-box;
+      line-height: 1.3;
+    }
+    .cal-gantt-v-bar .vbar-badge {
+      font-size: 0.68rem;
+      padding: 1px 5px;
+      border-radius: 3px;
+      line-height: 1.25;
+      font-weight: bold;
+      display: inline-block;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .cal-gantt-v-bar .vbar-title {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* ==========================================================================
+       複数月カレンダー印刷（パターンA: 1ヶ月1ページ / パターンB: A4横2ヶ月並列）
+       ========================================================================== */
+    #multiCalPrintContainer {
+      display: none;
+    }
+
+    body.multi-cal-printing {
+      background: #FFFFFF !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: visible !important;
+    }
+    body.multi-cal-printing > :not(#multiCalPrintContainer) {
+      display: none !important;
+    }
+    body.multi-cal-printing #multiCalPrintContainer {
+      display: block !important;
+      width: 100% !important;
+      background: #FFFFFF !important;
+    }
+
+    /* パターンA：1ヶ月1ページ */
+    .multi-cal-page-pattern-a {
+      page-break-after: always;
+      break-after: page;
+      padding: 8mm 10mm;
+      box-sizing: border-box;
+      min-height: 96vh;
+      display: flex;
+      flex-direction: column;
+      background: #FFFFFF;
+    }
+    .multi-cal-page-pattern-a:last-child {
+      page-break-after: auto;
+      break-after: auto;
+    }
+
+    /* パターンB：A4横 2ヶ月並列 */
+    .multi-cal-page-pattern-b {
+      page-break-after: always;
+      break-after: page;
+      padding: 6mm 8mm;
+      box-sizing: border-box;
+      min-height: 96vh;
+      display: flex;
+      flex-direction: column;
+      background: #FFFFFF;
+    }
+    .multi-cal-page-pattern-b:last-child {
+      page-break-after: auto;
+      break-after: auto;
+    }
+    .multi-cal-b-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      flex: 1;
+    }
+
+    .multi-cal-sheet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      border-bottom: 2px solid var(--border-month-thick);
+      padding-bottom: 5px;
+      margin-bottom: 8px;
+    }
+    .multi-cal-site-title {
+      font-size: 1.15rem;
+      font-weight: bold;
+      color: var(--text-main);
+    }
+    .multi-cal-site-period {
+      font-size: 0.78rem;
+      color: var(--text-sub);
+    }
+    .multi-cal-month-title {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: #0F766E;
+    }
+
+    .multi-cal-grid-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .multi-cal-grid-wrapper .calendar-grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      width: 100%;
+      border: 1.5pt solid var(--border-month-thick);
+    }
+    .multi-cal-grid-wrapper .cal-day-cell {
+      min-height: 64px;
+      padding: 2px 3px;
+    }
+    .multi-cal-page-pattern-b .multi-cal-grid-wrapper .cal-day-cell {
+      min-height: 48px;
+      padding: 1px 2px;
+    }
+    .multi-cal-page-pattern-b .cal-gantt-h-bar {
+      font-size: 0.58rem !important;
+      padding: 1px 3px !important;
+    }
+    .multi-cal-page-pattern-b .badge-pill {
+      font-size: 0.55rem !important;
+      padding: 1px 2px !important;
+    }
+
   </style>
 </head>
 <body>
@@ -1951,6 +2135,7 @@
           <div class="cal-toggle-group no-print" style="display:flex; gap:6px; flex-wrap:wrap;">
             <button type="button" class="btn btn-accent" id="btnCalListToggle" onclick="toggleCalMobileListMode()">📱 縦リスト切替</button>
             <button type="button" class="btn btn-accent" id="btnCalGanttToggle" onclick="toggleCalGanttTags()">📊 工程表の予定：表示中</button>
+            <button type="button" class="btn" id="btnMultiCalPrint" onclick="openMultiCalPrintModal()" style="background:#0F766E; color:#FFFFFF; border:none; font-weight:bold;">🖨️ 複数月印刷</button>
           </div>
         </div>
         <div class="cal-legend">
@@ -3059,26 +3244,67 @@
       return Math.round(sum * 10) / 10;
     }
 
-    function renderCalendar() {
-      const labelEl = document.getElementById("calCurrentMonthLabel");
-      if (labelEl) {
-        labelEl.textContent = `${calYear}年${calMonth}月（R${calYear - 2018}.${calMonth}）`;
-      }
+// ============================================================================
+    // ガントチャートタスク・色分けパレット＆進行状況判定
+    // ============================================================================
+    const TASK_PALETTE = [
+      { bg: "#15803D", border: "#166534" }, // 濃緑（木工事・大工など）
+      { bg: "#0369A1", border: "#075985" }, // 濃青（設備・配管・電気）
+      { bg: "#B45309", border: "#92400E" }, // 濃茶（解体・基礎）
+      { bg: "#7C3AED", border: "#6D28D9" }, // 濃紫（サッシ・建具）
+      { bg: "#BE123C", border: "#9F1239" }, // ワイン赤（内装・クロス）
+      { bg: "#0F766E", border: "#115E59" }, // ティール青緑（外壁・塗装・屋根）
+      { bg: "#C2410C", border: "#9A3412" }, // 濃オレンジ（左官・タイル）
+      { bg: "#4338CA", border: "#3730A3" }, // インディゴ紺（クリーニング・検査）
+      { bg: "#374151", border: "#1F2937" }  // ダークスレート（その他）
+    ];
 
-      const btn = document.getElementById("btnCalListToggle");
-      if (btn) {
-        btn.textContent = calMobileListMode ? "🗓️ 7曜枠に切替" : "📱 縦リスト切替";
-      }
+    function getTaskColorInfo(task, index) {
+      const name = (task && task.name) ? String(task.name) : "";
+      if (/解体|基礎|土工|仮設/.test(name)) return { bg: "#B45309", border: "#92400E" };
+      if (/大工|木工|下地|造作|建方|上棟/.test(name)) return { bg: "#15803D", border: "#166534" };
+      if (/給排水|配管|設備|衛生|空調|換気|水道/.test(name)) return { bg: "#0369A1", border: "#075985" };
+      if (/電気|配線|照明|分電盤/.test(name)) return { bg: "#D97706", border: "#B45309" };
+      if (/サッシ|建具|窓|ガラス|玄関|ドア/.test(name)) return { bg: "#0F766E", border: "#115E59" };
+      if (/内装|クロス|壁紙|床|フロア|CF|塗装|美装/.test(name)) return { bg: "#BE123C", border: "#9F1239" };
+      if (/外壁|サイディング|屋根|板金|防水|雨樋/.test(name)) return { bg: "#4338CA", border: "#3730A3" };
+      if (/左官|タイル|モルタル|土間/.test(name)) return { bg: "#C2410C", border: "#9A3412" };
+      if (/清掃|美装|ハウスクリーニング|仕上/.test(name)) return { bg: "#7C3AED", border: "#6D28D9" };
+      if (/検査|引渡|立会|確認/.test(name)) return { bg: "#374151", border: "#1F2937" };
 
-      const ganttBtn = document.getElementById("btnCalGanttToggle");
-      if (ganttBtn) {
-        ganttBtn.textContent = calShowGanttTags ? "📊 工程表予定：ON" : "🙈 工程表予定：OFF";
-        ganttBtn.classList.toggle("btn-accent", calShowGanttTags);
+      let hash = 0;
+      for (let i = 0; i < name.length; i++) {
+        hash = (hash << 5) - hash + name.charCodeAt(i);
+        hash |= 0;
       }
+      const idx = typeof index === "number" ? index : Math.abs(hash);
+      const c = TASK_PALETTE[Math.abs(idx) % TASK_PALETTE.length];
+      return { bg: c.bg, border: c.border };
+    }
 
-      const grid = document.getElementById("calendarGrid");
-      if (!grid) return;
-      grid.classList.toggle("mobile-list-mode", calMobileListMode);
+    function getTaskDayStatus(task, ymdStr) {
+      if (!task || !task.start || !task.end) return null;
+      const s = parseDateLocal(task.start);
+      const e = parseDateLocal(task.end);
+      const cur = parseDateLocal(ymdStr);
+      if (!s || !e || !cur) return null;
+      if (cur < s || cur > e) return null;
+
+      const totalDays = Math.max(1, Math.round((e - s) / (1000 * 60 * 60 * 24)) + 1);
+      const currentDay = Math.max(1, Math.round((cur - s) / (1000 * 60 * 60 * 24)) + 1);
+      const isStart = task.start === ymdStr;
+      const isEnd = task.end === ymdStr;
+      const isSingle = isStart && isEnd;
+      return { totalDays, currentDay, isStart, isEnd, isSingle };
+    }
+
+    // 単一月のカレンダーHTMLを生成する共通関数（画面描画・複数月印刷共通）
+    function generateMonthCalendarHtml(targetYear, targetMonth, options = {}) {
+      const isPrint = Boolean(options.isPrint);
+      const showGantt = options.showGantt !== false;
+      const showEvents = options.showEvents !== false;
+      const showNotes = options.showNotes !== false;
+      const isMobileList = Boolean(options.isMobileList);
 
       const dows = ["日", "月", "火", "水", "木", "金", "土"];
       let html = dows.map((w, i) => {
@@ -3086,19 +3312,21 @@
         return `<div class="cal-dow-header ${cls}">${w}</div>`;
       }).join("");
 
-      const firstDayDow = new Date(calYear, calMonth - 1, 1).getDay();
-      const daysInMonth = new Date(calYear, calMonth, 0).getDate();
+      const firstDayDow = new Date(targetYear, targetMonth - 1, 1).getDay();
+      const daysInMonth = new Date(targetYear, targetMonth, 0).getDate();
 
-      for (let i = 0; i < firstDayDow; i++) {
-        html += `<div class="cal-day-cell empty-cell"></div>`;
+      if (!isMobileList) {
+        for (let i = 0; i < firstDayDow; i++) {
+          html += `<div class="cal-day-cell empty-cell"></div>`;
+        }
       }
 
       let monthTotalNinku = 0;
       const periodDates = parsePeriodStringDates(document.getElementById("metaPeriod")?.value || "");
 
       for (let day = 1; day <= daysInMonth; day++) {
-        const ymd = `${calYear}-${String(calMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-        const dow = new Date(calYear, calMonth - 1, day).getDay();
+        const ymd = `${targetYear}-${String(targetMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+        const dow = new Date(targetYear, targetMonth - 1, day).getDay();
         const dowCls = dow === 0 ? "cal-day-sun" : (dow === 6 ? "cal-day-sat" : "");
 
         const rec = dailyRecords[ymd] || { weather: "", workNote: "", events: [], ninku: {} };
@@ -3106,7 +3334,7 @@
         const dayNinku = calcDayTotalNinku(ymd);
         monthTotalNinku += dayNinku;
 
-        // 全体工期の着工日・完工予定日マイルストーン表示
+        // 全体工期の着工日・完工予定日マイルストーン
         let milestoneHtml = "";
         if (periodDates.startYmd === ymd) {
           milestoneHtml += `<div class="badge-pill" style="background:#0F6835; color:#FFFFFF; width:100%; justify-content:flex-start;">🏁 全体着工日</div>`;
@@ -3115,18 +3343,83 @@
           milestoneHtml += `<div class="badge-pill" style="background:#B91C1C; color:#FFFFFF; width:100%; justify-content:flex-start;">🎉 全体完工予定日</div>`;
         }
 
-        // ガントチャート連動タグ（calShowGanttTags が true のときのみ表示）
-        let ganttTagsHtml = "";
-        if (calShowGanttTags && activeGantt.length > 0) {
-          const maxShow = calMobileListMode ? activeGantt.length : 3;
-          const shown = activeGantt.slice(0, maxShow).map(t => `<span class="cal-gantt-tag">${escapeHtml(t.name)}</span>`).join("");
-          const extra = activeGantt.length > maxShow ? `<span class="cal-gantt-tag">+${activeGantt.length - maxShow}</span>` : "";
-          ganttTagsHtml = `<div class="cal-gantt-tags">${shown}${extra}</div>`;
+        // 工事予定バー（7曜カレンダー横バー ＆ スマホ縦リスト縦バー）
+        let ganttBarsHtml = "";
+        if (showGantt && activeGantt.length > 0) {
+          if (!isMobileList) {
+            // 7曜カレンダー（マス目）：横バー表示
+            const maxShow = isPrint ? 4 : 3;
+            const shownTasks = activeGantt.slice(0, maxShow);
+            const extraCount = activeGantt.length - maxShow;
+            const bars = shownTasks.map((t, idx) => {
+              const color = getTaskColorInfo(t, idx);
+              const st = getTaskDayStatus(t, ymd);
+              let radiusStyle = "border-radius:0;";
+              let iconPrefix = "";
+              let iconSuffix = "";
+
+              if (st) {
+                if (st.isSingle) {
+                  radiusStyle = "border-radius:4px;";
+                  iconPrefix = "▶ ";
+                  iconSuffix = " ◀";
+                } else if (st.isStart) {
+                  radiusStyle = "border-radius:4px 0 0 4px;";
+                  iconPrefix = "▶ ";
+                } else if (st.isEnd) {
+                  radiusStyle = "border-radius:0 4px 4px 0;";
+                  iconSuffix = " ◀";
+                }
+              }
+
+              return `
+                <div class="cal-gantt-h-bar" style="background:${color.bg}; color:#FFFFFF; border-left:1px solid ${color.border}; border-right:1px solid ${color.border}; ${radiusStyle}" title="${escapeHtml(t.name)} (${t.start}〜${t.end})">
+                  ${iconPrefix}${escapeHtml(t.name)}${iconSuffix}
+                </div>
+              `;
+            }).join("");
+
+            const extraHtml = extraCount > 0 ? `<div class="cal-gantt-h-more">+他${extraCount}件</div>` : "";
+            ganttBarsHtml = `<div class="cal-gantt-bars-container">${bars}${extraHtml}</div>`;
+          } else {
+            // スマホ縦リスト：縦バー・帯表示
+            const vbars = activeGantt.map((t, idx) => {
+              const color = getTaskColorInfo(t, idx);
+              const st = getTaskDayStatus(t, ymd);
+              let stateText = "";
+              let icon = "　";
+              if (st) {
+                if (st.isSingle) {
+                  icon = "▶";
+                  stateText = `【本日完結】 ${escapeHtml(t.name)}`;
+                } else if (st.isStart) {
+                  icon = "▶";
+                  stateText = `【開始】 ${escapeHtml(t.name)} <span style="opacity:0.85; font-size:0.75rem; font-weight:normal;">(全${st.totalDays}日間)</span>`;
+                } else if (st.isEnd) {
+                  icon = "◀";
+                  stateText = `【完了】 ${escapeHtml(t.name)} <span style="opacity:0.85; font-size:0.75rem; font-weight:normal;">(本日最終日)</span>`;
+                } else {
+                  icon = "┃";
+                  stateText = `【進行中】 ${escapeHtml(t.name)} <span style="opacity:0.85; font-size:0.75rem; font-weight:normal;">(${st.currentDay}日目/全${st.totalDays}日)</span>`;
+                }
+              } else {
+                stateText = escapeHtml(t.name);
+              }
+
+              return `
+                <div class="cal-gantt-v-bar" style="border-left:5px solid ${color.bg}; background:${color.bg}15; color:#1E293B;">
+                  <span class="vbar-badge" style="background:${color.bg}; color:#FFFFFF;">${icon}</span>
+                  <span class="vbar-title">${stateText}</span>
+                </div>
+              `;
+            }).join("");
+            ganttBarsHtml = `<div class="cal-gantt-vbars-container">${vbars}</div>`;
+          }
         }
 
         // 予定バッジ（納品・職人入場・検査）
         let eventsHtml = "";
-        if (rec.events && rec.events.length > 0) {
+        if (showEvents && rec.events && rec.events.length > 0) {
           eventsHtml = `<div class="cal-events-list">` + rec.events.map(ev => {
             const icon = ev.type === "delivery" ? "📦" : (ev.type === "worker" ? "👷" : "🚩");
             const typeClass = ev.type === "delivery" ? "badge-delivery" : (ev.type === "worker" ? "badge-worker" : "badge-inspect");
@@ -3137,16 +3430,17 @@
         }
 
         // 当日作業メモ
-        const noteHtml = rec.workNote
-          ? `<div class="cal-work-note">🔨 ${escapeHtml(rec.workNote)}</div>`
-          : "";
+        let noteHtml = "";
+        if (showNotes && rec.workNote) {
+          noteHtml = `<div class="cal-work-note">🔨 ${escapeHtml(rec.workNote)}</div>`;
+        }
 
-        // 人工バッジ（職種内訳つき：縦リストは1行、7曜カレンダーで複数職種のときは見やすい小分けタグ表示）
+        // 人工バッジ
         let ninkuHtml = "";
-        if (dayNinku > 0) {
+        if (showNotes && dayNinku > 0) {
           const activeNinkuEntries = Object.entries(rec.ninku || {})
             .filter(([_, v]) => parseFloat(v) > 0);
-          if (calMobileListMode || activeNinkuEntries.length <= 1) {
+          if (isMobileList || activeNinkuEntries.length <= 1) {
             const breakdown = activeNinkuEntries.map(([k, v]) => `${k}${v}`).join("・");
             ninkuHtml = `<div class="badge-pill badge-ninku" style="align-self:flex-start;">👷 ${dayNinku}人工（${escapeHtml(breakdown)}）</div>`;
           } else {
@@ -3162,24 +3456,27 @@
           }
         }
 
-        // お客様打合せがその日にあれば表示
-        const dayMtgs = meetings.filter(m => m.date === ymd);
-        const mtgHtml = dayMtgs.map(m =>
-          `<div class="badge-pill badge-meeting" style="width:100%; justify-content:flex-start;">🤝 ${escapeHtml(m.content)}</div>`
-        ).join("");
+        // お客様打合せ
+        let mtgHtml = "";
+        if (showNotes) {
+          const dayMtgs = meetings.filter(m => m.date === ymd);
+          mtgHtml = dayMtgs.map(m =>
+            `<div class="badge-pill badge-meeting" style="width:100%; justify-content:flex-start;">🤝 ${escapeHtml(m.content)}</div>`
+          ).join("");
+        }
 
-        const hasEntry = Boolean(milestoneHtml) || (rec.events && rec.events.length > 0) || Boolean(rec.workNote) || dayNinku > 0 || dayMtgs.length > 0;
+        const hasEntry = Boolean(milestoneHtml) || Boolean(ganttBarsHtml) || (rec.events && rec.events.length > 0) || Boolean(rec.workNote) || dayNinku > 0 || (showNotes && meetings.some(m => m.date === ymd));
         const entryCls = hasEntry ? "has-entry" : "";
+        const clickAttr = isPrint ? "" : `onclick="openDailyModal('${ymd}')"`;
 
         html += `
-          <div class="cal-day-cell ${dowCls} ${entryCls}" onclick="openDailyModal('${ymd}')">
+          <div class="cal-day-cell ${dowCls} ${entryCls}" ${clickAttr}>
             <div class="cal-day-top">
               <span class="cal-day-num">${day}日<span style="font-size:0.74rem; font-weight:normal; margin-left:2px;">(${dows[dow]})</span></span>
               <span class="cal-weather">${escapeHtml(rec.weather || "")}</span>
-              ${calMobileListMode ? ganttTagsHtml : ""}
             </div>
             ${milestoneHtml}
-            ${!calMobileListMode ? ganttTagsHtml : ""}
+            ${ganttBarsHtml}
             ${eventsHtml}
             ${mtgHtml}
             ${noteHtml}
@@ -3188,19 +3485,229 @@
         `;
       }
 
-      const totalCells = firstDayDow + daysInMonth;
-      const trailing = (7 - (totalCells % 7)) % 7;
-      for (let i = 0; i < trailing; i++) {
-        html += `<div class="cal-day-cell empty-cell"></div>`;
+      if (!isMobileList) {
+        const totalCells = firstDayDow + daysInMonth;
+        const trailing = (7 - (totalCells % 7)) % 7;
+        for (let i = 0; i < trailing; i++) {
+          html += `<div class="cal-day-cell empty-cell"></div>`;
+        }
       }
 
-      grid.innerHTML = html;
+      return { html, monthTotalNinku };
+    }
+
+    function renderCalendar() {
+      const labelEl = document.getElementById("calCurrentMonthLabel");
+      if (labelEl) {
+        labelEl.textContent = `${calYear}年${calMonth}月（R${calYear - 2018}.${calMonth}）`;
+      }
+
+      const btn = document.getElementById("btnCalListToggle");
+      if (btn) {
+        btn.textContent = calMobileListMode ? "🗓️ 7曜枠に切替" : "📱 縦リスト切替";
+      }
+
+      const ganttBtn = document.getElementById("btnCalGanttToggle");
+      if (ganttBtn) {
+        ganttBtn.textContent = calShowGanttTags ? "📊 工程表の予定：ON" : "🙈 工程表の予定：OFF";
+        ganttBtn.classList.toggle("btn-accent", calShowGanttTags);
+      }
+
+      const grid = document.getElementById("calendarGrid");
+      if (!grid) return;
+      grid.classList.toggle("mobile-list-mode", calMobileListMode);
+
+      const res = generateMonthCalendarHtml(calYear, calMonth, {
+        isPrint: false,
+        showGantt: calShowGanttTags,
+        showEvents: true,
+        showNotes: true,
+        isMobileList: calMobileListMode
+      });
+
+      grid.innerHTML = res.html;
 
       const totalEl = document.getElementById("calMonthTotalNinku");
       if (totalEl) {
-        totalEl.textContent = `今月合計：${Math.round(monthTotalNinku * 10) / 10} 人工`;
+        totalEl.textContent = `今月合計：${Math.round(res.monthTotalNinku * 10) / 10} 人工`;
       }
       updateTabBadges();
+    }
+
+    // 複数月カレンダー印刷モーダル開閉・実行
+    function openMultiCalPrintModal() {
+      const backdrop = document.getElementById("multiCalPrintModalBackdrop");
+      if (!backdrop) return;
+
+      const periodDates = parsePeriodStringDates(document.getElementById("metaPeriod")?.value || "");
+      let startYm = `${calYear}-${String(calMonth).padStart(2, "0")}`;
+      let endYm = startYm;
+
+      if (periodDates.startYmd) {
+        const s = parseDateLocal(periodDates.startYmd);
+        if (s) startYm = `${s.getFullYear()}-${String(s.getMonth() + 1).padStart(2, "0")}`;
+      }
+      if (periodDates.endYmd) {
+        const e = parseDateLocal(periodDates.endYmd);
+        if (e) endYm = `${e.getFullYear()}-${String(e.getMonth() + 1).padStart(2, "0")}`;
+      }
+
+      const sInput = document.getElementById("multiCalStartMonth");
+      const eInput = document.getElementById("multiCalEndMonth");
+      if (sInput) sInput.value = startYm;
+      if (eInput) eInput.value = endYm;
+
+      backdrop.classList.add("open");
+    }
+
+    function closeMultiCalPrintModal() {
+      const backdrop = document.getElementById("multiCalPrintModalBackdrop");
+      if (backdrop) backdrop.classList.remove("open");
+    }
+
+    function onMultiCalModalBackdropClick(e) {
+      if (e.target && e.target.id === "multiCalPrintModalBackdrop") {
+        closeMultiCalPrintModal();
+      }
+    }
+
+    function executeMultiCalPrint() {
+      const sVal = document.getElementById("multiCalStartMonth")?.value;
+      const eVal = document.getElementById("multiCalEndMonth")?.value;
+      if (!sVal || !eVal) {
+        alert("開始月と終了月を選択してください。");
+        return;
+      }
+      const [sY, sM] = sVal.split("-").map(Number);
+      const [eY, eM] = eVal.split("-").map(Number);
+      if (sY > eY || (sY === eY && sM > eM)) {
+        alert("終了月は開始月以降を選択してください。");
+        return;
+      }
+
+      const monthsList = [];
+      let curY = sY;
+      let curM = sM;
+      while (curY < eY || (curY === eY && curM <= eM)) {
+        monthsList.push({ year: curY, month: curM });
+        curM++;
+        if (curM > 12) {
+          curM = 1;
+          curY++;
+        }
+      }
+
+      const pattern = document.querySelector("input[name='multiCalPattern']:checked")?.value || "patternA";
+      const optGantt = document.getElementById("multiCalOptGantt")?.checked ?? true;
+      const optEvents = document.getElementById("multiCalOptEvents")?.checked ?? true;
+      const optNotes = document.getElementById("multiCalOptNotes")?.checked ?? true;
+
+      const siteName = document.getElementById("metaSiteName")?.value || "現場工程管理";
+      const periodText = document.getElementById("metaPeriod")?.value || "";
+
+      let container = document.getElementById("multiCalPrintContainer");
+      if (!container) {
+        container = document.createElement("div");
+        container.id = "multiCalPrintContainer";
+        document.body.appendChild(container);
+      }
+
+      let printHtml = "";
+
+      if (pattern === "patternA") {
+        // パターンA：1ヶ月1ページ
+        printHtml = monthsList.map(item => {
+          const res = generateMonthCalendarHtml(item.year, item.month, {
+            isPrint: true,
+            showGantt: optGantt,
+            showEvents: optEvents,
+            showNotes: optNotes,
+            isMobileList: false
+          });
+          return `
+            <div class="multi-cal-page-pattern-a">
+              <div class="multi-cal-sheet-header">
+                <div>
+                  <div class="multi-cal-site-title">🏠 ${escapeHtml(siteName)} 工程カレンダー</div>
+                  <div class="multi-cal-site-period">全体工期：${escapeHtml(periodText)}</div>
+                </div>
+                <div class="multi-cal-month-title">${item.year}年 ${item.month}月 <span style="font-size:0.9rem; font-weight:normal;">(R${item.year - 2018}.${item.month})</span></div>
+              </div>
+              <div class="multi-cal-grid-wrapper">
+                <div class="calendar-grid">${res.html}</div>
+              </div>
+            </div>
+          `;
+        }).join("");
+      } else {
+        // パターンB：A4横 2ヶ月並列（2ヶ月ごとに1ページ）
+        for (let i = 0; i < monthsList.length; i += 2) {
+          const m1 = monthsList[i];
+          const m2 = monthsList[i + 1] || null;
+
+          const res1 = generateMonthCalendarHtml(m1.year, m1.month, {
+            isPrint: true,
+            showGantt: optGantt,
+            showEvents: optEvents,
+            showNotes: optNotes,
+            isMobileList: false
+          });
+
+          let calHtml2 = "";
+          let title2 = "";
+          if (m2) {
+            const res2 = generateMonthCalendarHtml(m2.year, m2.month, {
+              isPrint: true,
+              showGantt: optGantt,
+              showEvents: optEvents,
+              showNotes: optNotes,
+              isMobileList: false
+            });
+            calHtml2 = res2.html;
+            title2 = ` ＆ ${m2.year}年${m2.month}月`;
+          }
+
+          printHtml += `
+            <div class="multi-cal-page-pattern-b">
+              <div class="multi-cal-sheet-header">
+                <div>
+                  <div class="multi-cal-site-title">🏠 ${escapeHtml(siteName)} 工程カレンダー</div>
+                  <div class="multi-cal-site-period">全体工期：${escapeHtml(periodText)}</div>
+                </div>
+                <div class="multi-cal-month-title">${m1.year}年${m1.month}月${title2}</div>
+              </div>
+              <div class="multi-cal-b-grid">
+                <div class="multi-cal-grid-wrapper">
+                  <div style="font-weight:bold; font-size:0.95rem; color:#0F766E; margin-bottom:4px;">📅 ${m1.year}年 ${m1.month}月</div>
+                  <div class="calendar-grid">${res1.html}</div>
+                </div>
+                ${m2 ? `
+                <div class="multi-cal-grid-wrapper">
+                  <div style="font-weight:bold; font-size:0.95rem; color:#0F766E; margin-bottom:4px;">📅 ${m2.year}年 ${m2.month}月</div>
+                  <div class="calendar-grid">${calHtml2}</div>
+                </div>
+                ` : `<div style="flex:1;"></div>`}
+              </div>
+            </div>
+          `;
+        }
+      }
+
+      container.innerHTML = printHtml;
+      closeMultiCalPrintModal();
+
+      document.body.classList.add("multi-cal-printing");
+
+      const cleanup = () => {
+        document.body.classList.remove("multi-cal-printing");
+        window.removeEventListener("afterprint", cleanup);
+      };
+      window.addEventListener("afterprint", cleanup);
+
+      setTimeout(() => {
+        window.print();
+        setTimeout(cleanup, 2000);
+      }, 100);
     }
 
     // 日別モーダル開閉・操作
@@ -5685,5 +6192,85 @@
       });
     });
   </script>
+
+  <!-- ======================================================================
+       モーダル：📅 複数月カレンダー印刷 / PDF出力（パターンA＆パターンB）
+       ====================================================================== -->
+  <div class="modal-backdrop no-print" id="multiCalPrintModalBackdrop" onclick="onMultiCalModalBackdropClick(event)">
+    <div class="modal-card" style="max-width: 580px;" onclick="event.stopPropagation()">
+      <div class="modal-header" style="background:#0F766E;">
+        <h3>📅 複数月カレンダー印刷 / PDF出力</h3>
+        <button type="button" class="modal-close-btn" onclick="closeMultiCalPrintModal()">✕ 閉じる</button>
+      </div>
+      <div class="modal-body">
+        <div style="font-size:0.85rem; color:var(--text-sub); line-height:1.5;">
+          現場の工期に合わせて、複数月のカレンダーをまとめてPDF保存・A4印刷できます。
+        </div>
+
+        <!-- 期間選択 -->
+        <div class="modal-section">
+          <div class="modal-section-title">
+            <span>📆 出力期間（開始月 〜 終了月）</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <input type="month" id="multiCalStartMonth" class="month-picker-input" style="flex:1; min-width:140px; padding:6px 10px; font-size:0.95rem; font-weight:bold;">
+            <span style="font-weight:bold; color:var(--text-sub);">〜</span>
+            <input type="month" id="multiCalEndMonth" class="month-picker-input" style="flex:1; min-width:140px; padding:6px 10px; font-size:0.95rem; font-weight:bold;">
+          </div>
+        </div>
+
+        <!-- レイアウト形式選択 -->
+        <div class="modal-section">
+          <div class="modal-section-title">
+            <span>📄 出力レイアウト形式</span>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <label style="display:flex; align-items:flex-start; gap:8px; padding:10px; border:2px solid var(--border-color); border-radius:8px; cursor:pointer; background:#FFFFFF;" id="labelPatternA">
+              <input type="radio" name="multiCalPattern" value="patternA" checked style="margin-top:2px;">
+              <div>
+                <div style="font-weight:bold; font-size:0.88rem; color:#0F766E;">【パターンA】</div>
+                <div style="font-size:0.84rem; font-weight:bold; margin-top:2px;">1ヶ月1ページ</div>
+                <div style="font-size:0.72rem; color:var(--text-sub); margin-top:2px; line-height:1.3;">マス目が大きく書き込みやすい標準仕様（A4縦・横どちらも対応）</div>
+              </div>
+            </label>
+            <label style="display:flex; align-items:flex-start; gap:8px; padding:10px; border:2px solid var(--border-color); border-radius:8px; cursor:pointer; background:#FFFFFF;" id="labelPatternB">
+              <input type="radio" name="multiCalPattern" value="patternB" style="margin-top:2px;">
+              <div>
+                <div style="font-weight:bold; font-size:0.88rem; color:#0F766E;">【パターンB】</div>
+                <div style="font-size:0.84rem; font-weight:bold; margin-top:2px;">A4横 2ヶ月並列</div>
+                <div style="font-size:0.72rem; color:var(--text-sub); margin-top:2px; line-height:1.3;">A4横1枚に左右2ヶ月ずつ並べて全体の推移をコンパクトに一覧</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- 出力オプション -->
+        <div class="modal-section">
+          <div class="modal-section-title">
+            <span>⚙️ 出力項目オプション</span>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:6px; font-size:0.84rem;">
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+              <input type="checkbox" id="multiCalOptGantt" checked> 📊 工程表の予定バーを含める
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+              <input type="checkbox" id="multiCalOptEvents" checked> 📦 納品・👷 職人入場・🚩 検査バッジを含める
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+              <input type="checkbox" id="multiCalOptNotes" checked> 🤝 お客様打合せ・🔨 当日メモ・👷 当日人工を含める
+            </label>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:6px;">
+          <button type="button" class="btn" onclick="closeMultiCalPrintModal()">キャンセル</button>
+          <button type="button" class="btn" onclick="executeMultiCalPrint()" style="background:#0F766E; color:#FFFFFF; font-weight:bold; padding:8px 20px; font-size:0.92rem; border:none; border-radius:6px; box-shadow:0 2px 4px rgba(0,0,0,0.15);">
+            🖨️ 印刷プレビュー / PDF出力
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>

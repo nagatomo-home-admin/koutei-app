@@ -1050,6 +1050,45 @@
 
     .cal-day-sun .cal-day-num { color: #DC2626; }
     .cal-day-sat .cal-day-num { color: #0284C7; }
+    .cal-day-holiday .cal-day-num { color: #DC2626 !important; }
+
+    /* 祝日バッジ */
+    .cal-holiday-tag {
+      display: inline-flex;
+      align-items: center;
+      background: #FEE2E2;
+      color: #DC2626;
+      border: 1px solid #FECACA;
+      border-radius: 3px;
+      font-size: 0.68rem;
+      font-weight: bold;
+      padding: 0 4px;
+      margin-left: 3px;
+      line-height: 1.25;
+      vertical-align: middle;
+      white-space: nowrap;
+      max-width: 96px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .cal-day-cell.is-past .cal-holiday-tag {
+      color: #94A3B8 !important;
+      background: #E2E8F0 !important;
+      border-color: #CBD5E1 !important;
+    }
+    .calendar-grid.mobile-list-mode .cal-holiday-tag {
+      display: inline-flex !important;
+      font-size: 0.72rem;
+      padding: 1px 6px;
+      border-radius: 4px;
+      max-width: none;
+    }
+    .multi-cal-grid-wrapper .cal-holiday-tag {
+      font-size: 0.58rem !important;
+      padding: 0 2px !important;
+      border-width: 0.5px !important;
+      max-width: 58px;
+    }
 
     .cal-weather { font-size: 0.85rem; }
 
@@ -3337,11 +3376,113 @@
       return `${d.getMonth() + 1}/${d.getDate()}`;
     }
 
+    // =========================================================================
+    // 日本の国民の祝日・振替休日・国民の休日 自動算出ロジック
+    // =========================================================================
+    const _japaneseHolidayCache = {};
+
+    function calculateJapaneseHolidaysForYear(year) {
+      const holidays = {};
+
+      function add(m, d, name) {
+        if (!d || d < 1 || d > 31) return;
+        const ymd = `${year}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+        holidays[ymd] = name;
+      }
+
+      function getHappyMonday(m, nth) {
+        let count = 0;
+        for (let d = 1; d <= 31; d++) {
+          const dt = new Date(year, m - 1, d);
+          if (dt.getMonth() !== m - 1) break;
+          if (dt.getDay() === 1) {
+            count++;
+            if (count === nth) return d;
+          }
+        }
+        return 0;
+      }
+
+      // 固定祝日 & ハッピーマンデー
+      add(1, 1, "元日");
+      add(1, getHappyMonday(1, 2), "成人の日");
+      add(2, 11, "建国記念の日");
+      if (year >= 2020) {
+        add(2, 23, "天皇誕生日");
+      } else if (year <= 2018) {
+        add(12, 23, "天皇誕生日");
+      }
+
+      // 春分の日（天文計算公式）
+      const springDay = Math.floor(20.8431 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4));
+      add(3, springDay, "春分の日");
+
+      add(4, 29, "昭和の日");
+      add(5, 3, "憲法記念日");
+      add(5, 4, "みどりの日");
+      add(5, 5, "こどもの日");
+
+      add(7, getHappyMonday(7, 3), "海の日");
+      if (year >= 2016) {
+        add(8, 11, "山の日");
+      }
+
+      const respectDay = getHappyMonday(9, 3);
+      add(9, respectDay, "敬老の日");
+
+      // 秋分の日（天文計算公式）
+      const autumnDay = Math.floor(23.2488 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4));
+      add(9, autumnDay, "秋分の日");
+
+      // 国民の休日（敬老の日と秋分の日に挟まれた火曜日）
+      if (autumnDay - respectDay === 2) {
+        add(9, respectDay + 1, "国民の休日");
+      }
+
+      add(10, getHappyMonday(10, 2), "スポーツの日");
+      add(11, 3, "文化の日");
+      add(11, 23, "勤労感謝の日");
+
+      // 振替休日（祝日が日曜日の場合、翌日以降で最初の非祝日）
+      const sortedDates = Object.keys(holidays).sort();
+      sortedDates.forEach(ymd => {
+        const [y, m, d] = ymd.split("-").map(Number);
+        const dt = new Date(y, m - 1, d);
+        if (dt.getDay() === 0) {
+          let subDt = new Date(y, m - 1, d + 1);
+          while (true) {
+            const subYmd = `${subDt.getFullYear()}-${String(subDt.getMonth() + 1).padStart(2, "0")}-${String(subDt.getDate()).padStart(2, "0")}`;
+            if (!holidays[subYmd]) {
+              holidays[subYmd] = "振替休日";
+              break;
+            }
+            subDt.setDate(subDt.getDate() + 1);
+          }
+        }
+      });
+
+      return holidays;
+    }
+
+    function getJapaneseHoliday(ymdStr) {
+      if (!ymdStr || typeof ymdStr !== "string") return null;
+      const parts = ymdStr.split("-");
+      if (parts.length < 3) return null;
+      const y = parseInt(parts[0], 10);
+      if (isNaN(y) || y < 1900 || y > 2100) return null;
+      if (!_japaneseHolidayCache[y]) {
+        _japaneseHolidayCache[y] = calculateJapaneseHolidaysForYear(y);
+      }
+      return _japaneseHolidayCache[y][ymdStr] || null;
+    }
+
     function formatJapaneseYMDDow(ymdStr) {
       const d = parseDateLocal(ymdStr);
       if (!d) return ymdStr;
       const dows = ["日", "月", "火", "水", "木", "金", "土"];
-      return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日（${dows[d.getDay()]}）`;
+      const hol = getJapaneseHoliday(ymdStr);
+      const dowText = hol ? `${dows[d.getDay()]}・祝` : dows[d.getDay()];
+      return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日（${dowText}）`;
     }
 
     function calcDaysInclusive(startStr, endStr) {
@@ -4309,7 +4450,10 @@
       for (let day = 1; day <= daysInMonth; day++) {
         const ymd = `${targetYear}-${String(targetMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
         const dow = new Date(targetYear, targetMonth - 1, day).getDay();
-        const dowCls = dow === 0 ? "cal-day-sun" : (dow === 6 ? "cal-day-sat" : "");
+        const holidayName = getJapaneseHoliday(ymd);
+        const isHoliday = Boolean(holidayName);
+        const dowCls = isHoliday ? "cal-day-sun cal-day-holiday" : (dow === 0 ? "cal-day-sun" : (dow === 6 ? "cal-day-sat" : ""));
+        const holidayTag = isHoliday ? `<span class="cal-holiday-tag" title="${escapeHtml(holidayName)}">${escapeHtml(holidayName)}</span>` : "";
 
         const isPast = highlightPast && (ymd < _todayYmd);
         const isToday = highlightToday && (ymd === _todayYmd);
@@ -4495,7 +4639,7 @@
         html += `
           <div class="cal-day-cell ${dowCls} ${entryCls} ${timeCls}" ${clickAttr}>
             <div class="cal-day-top">
-              <span class="cal-day-num">${day}日<span style="font-size:0.74rem; font-weight:normal; margin-left:2px;">(${dows[dow]})</span>${todayBadge}</span>
+              <span class="cal-day-num">${day}日<span style="font-size:0.74rem; font-weight:normal; margin-left:2px;">(${dows[dow]})</span>${holidayTag}${todayBadge}</span>
               <span class="cal-weather">${escapeHtml(rec.weather || "")}</span>
             </div>
             ${milestoneHtml}
@@ -4807,7 +4951,9 @@
 
       const titleEl = document.getElementById("modalDateTitle");
       if (titleEl) {
-        titleEl.textContent = `📅 ${formatJapaneseYMDDow(activeModalYmd)} ${rec.weather || ""}`;
+        const hol = getJapaneseHoliday(activeModalYmd);
+        const holSuffix = hol ? `【${hol}】` : "";
+        titleEl.textContent = `📅 ${formatJapaneseYMDDow(activeModalYmd)}${holSuffix} ${rec.weather || ""}`;
       }
 
       const activeGantt = getActiveGanttTasksForDate(activeModalYmd);

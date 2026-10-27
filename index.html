@@ -4144,6 +4144,8 @@
       const showGantt = options.showGantt !== false;
       const showEvents = options.showEvents !== false;
       const showNotes = options.showNotes !== false;
+      const highlightPast = options.highlightPast !== false;
+      const highlightToday = options.highlightToday !== false;
       const isMobileList = Boolean(options.isMobileList);
 
       const dows = ["日", "月", "火", "水", "木", "金", "土"];
@@ -4172,8 +4174,8 @@
         const dow = new Date(targetYear, targetMonth - 1, day).getDay();
         const dowCls = dow === 0 ? "cal-day-sun" : (dow === 6 ? "cal-day-sat" : "");
 
-        const isPast = ymd < _todayYmd;
-        const isToday = ymd === _todayYmd;
+        const isPast = highlightPast && (ymd < _todayYmd);
+        const isToday = highlightToday && (ymd === _todayYmd);
         const timeCls = isPast ? "is-past" : (isToday ? "is-today" : "is-future");
         const todayBadge = isToday ? `<span class="today-chip">本日</span>` : "";
 
@@ -4443,6 +4445,19 @@
       if (sInput) sInput.value = startYm;
       if (eInput) eInput.value = endYm;
 
+      // 前回記憶した印刷オプションを自動復元
+      try {
+        const savedOptsStr = localStorage.getItem("nagatomo_multical_opts_v1");
+        if (savedOptsStr) {
+          const so = JSON.parse(savedOptsStr);
+          if (so.gantt !== undefined && document.getElementById("multiCalOptGantt")) document.getElementById("multiCalOptGantt").checked = so.gantt;
+          if (so.events !== undefined && document.getElementById("multiCalOptEvents")) document.getElementById("multiCalOptEvents").checked = so.events;
+          if (so.notes !== undefined && document.getElementById("multiCalOptNotes")) document.getElementById("multiCalOptNotes").checked = so.notes;
+          if (so.past !== undefined && document.getElementById("multiCalOptPast")) document.getElementById("multiCalOptPast").checked = so.past;
+          if (so.today !== undefined && document.getElementById("multiCalOptToday")) document.getElementById("multiCalOptToday").checked = so.today;
+        }
+      } catch (e) {}
+
       backdrop.classList.add("open");
     }
 
@@ -4487,6 +4502,15 @@
       const optGantt = document.getElementById("multiCalOptGantt")?.checked ?? true;
       const optEvents = document.getElementById("multiCalOptEvents")?.checked ?? true;
       const optNotes = document.getElementById("multiCalOptNotes")?.checked ?? true;
+      const optPast = document.getElementById("multiCalOptPast")?.checked ?? true;
+      const optToday = document.getElementById("multiCalOptToday")?.checked ?? true;
+
+      // 印刷オプションの選択状態をブラウザに自動記憶
+      try {
+        localStorage.setItem("nagatomo_multical_opts_v1", JSON.stringify({
+          gantt: optGantt, events: optEvents, notes: optNotes, past: optPast, today: optToday
+        }));
+      } catch (e) {}
 
       const siteName = document.getElementById("metaProjectName")?.value || "現場工程管理";
       const periodText = document.getElementById("metaPeriod")?.value || "";
@@ -4508,6 +4532,8 @@
             showGantt: optGantt,
             showEvents: optEvents,
             showNotes: optNotes,
+            highlightPast: optPast,
+            highlightToday: optToday,
             isMobileList: false
           });
           const rowTemplate = `grid-template-rows: 22px repeat(${res.numWeeks}, minmax(0, 1fr));`;
@@ -4537,6 +4563,8 @@
             showGantt: optGantt,
             showEvents: optEvents,
             showNotes: optNotes,
+            highlightPast: optPast,
+            highlightToday: optToday,
             isMobileList: false
           });
           const rowTemplate1 = `grid-template-rows: 22px repeat(${res1.numWeeks}, minmax(0, 1fr));`;
@@ -4550,6 +4578,8 @@
               showGantt: optGantt,
               showEvents: optEvents,
               showNotes: optNotes,
+              highlightPast: optPast,
+              highlightToday: optToday,
               isMobileList: false
             });
             calHtml2 = res2.html;
@@ -7176,6 +7206,12 @@
             </label>
             <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
               <input type="checkbox" id="multiCalOptNotes" checked> 🤝 お客様打合せ・🔨 当日メモ・👷 当日人工を含める
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+              <input type="checkbox" id="multiCalOptPast" checked> ⏳ 経過した日（昨日までの過去日）の薄グレー色分けを印刷に反映する
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+              <input type="checkbox" id="multiCalOptToday" checked> 🌟 本日（今日）の特別強調・本日バッジを印刷に反映する
             </label>
           </div>
         </div>

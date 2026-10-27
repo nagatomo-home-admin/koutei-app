@@ -1732,15 +1732,15 @@
     .cal-gantt-bars-container {
       display: flex;
       flex-direction: column;
-      gap: 2px;
-      margin: 2px 0 3px 0;
+      gap: 1.5px;
+      margin: 1.5px 0 2px 0;
       width: 100%;
       min-width: 0;
     }
     .cal-gantt-h-bar {
-      font-size: 0.66rem;
-      line-height: 1.35;
-      padding: 1.5px 5px;
+      font-size: 0.65rem;
+      line-height: 1.3;
+      padding: 1px 4px;
       font-weight: bold;
       white-space: nowrap;
       overflow: hidden;
@@ -1751,12 +1751,8 @@
       width: 100%;
       box-sizing: border-box;
       cursor: pointer;
-    }
-    .cal-gantt-h-more {
-      font-size: 0.6rem;
-      color: var(--text-sub);
-      font-weight: bold;
-      padding: 0 2px;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
 
     /* スマホ縦リスト用 縦バー帯 */
@@ -1817,17 +1813,20 @@
       display: block !important;
       width: 100% !important;
       background: #FFFFFF !important;
+      margin: 0 !important;
+      padding: 0 !important;
     }
 
-    /* パターンA：1ヶ月1ページ */
+    /* パターンA：1ヶ月1ページ（A4横1枚に完全フィット） */
     .multi-cal-page-pattern-a {
       page-break-after: always;
       break-after: page;
-      padding: 8mm 10mm;
+      page-break-inside: avoid;
+      break-inside: avoid;
+      padding: 0;
+      margin: 0;
       box-sizing: border-box;
-      min-height: 96vh;
-      display: flex;
-      flex-direction: column;
+      width: 100%;
       background: #FFFFFF;
     }
     .multi-cal-page-pattern-a:last-child {
@@ -1835,15 +1834,16 @@
       break-after: auto;
     }
 
-    /* パターンB：A4横 2ヶ月並列 */
+    /* パターンB：A4横 2ヶ月並列（A4横1枚に左右2ヶ月完全フィット） */
     .multi-cal-page-pattern-b {
       page-break-after: always;
       break-after: page;
-      padding: 6mm 8mm;
+      page-break-inside: avoid;
+      break-inside: avoid;
+      padding: 0;
+      margin: 0;
       box-sizing: border-box;
-      min-height: 96vh;
-      display: flex;
-      flex-direction: column;
+      width: 100%;
       background: #FFFFFF;
     }
     .multi-cal-page-pattern-b:last-child {
@@ -1853,8 +1853,9 @@
     .multi-cal-b-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      flex: 1;
+      gap: 12px;
+      align-items: start;
+      width: 100%;
     }
 
     .multi-cal-sheet-header {
@@ -1862,51 +1863,61 @@
       justify-content: space-between;
       align-items: flex-end;
       border-bottom: 2px solid var(--border-month-thick);
-      padding-bottom: 5px;
-      margin-bottom: 8px;
+      padding-bottom: 3px;
+      margin-bottom: 5px;
     }
     .multi-cal-site-title {
-      font-size: 1.15rem;
+      font-size: 1.05rem;
       font-weight: bold;
       color: var(--text-main);
     }
     .multi-cal-site-period {
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       color: var(--text-sub);
     }
     .multi-cal-month-title {
-      font-size: 1.25rem;
+      font-size: 1.15rem;
       font-weight: bold;
       color: #0F766E;
     }
 
     .multi-cal-grid-wrapper {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
+      width: 100%;
     }
     .multi-cal-grid-wrapper .calendar-grid {
-      flex: 1;
       display: grid;
       grid-template-columns: repeat(7, minmax(0, 1fr));
       width: 100%;
       border: 1.5pt solid var(--border-month-thick);
     }
     .multi-cal-grid-wrapper .cal-day-cell {
-      min-height: 64px;
-      padding: 2px 3px;
+      min-height: 54px !important;
+      padding: 2px 3px !important;
+      gap: 1.5px !important;
     }
     .multi-cal-page-pattern-b .multi-cal-grid-wrapper .cal-day-cell {
-      min-height: 48px;
-      padding: 1px 2px;
+      min-height: 44px !important;
+      padding: 1.5px 2px !important;
+      gap: 1px !important;
     }
     .multi-cal-page-pattern-b .cal-gantt-h-bar {
-      font-size: 0.58rem !important;
-      padding: 1px 3px !important;
+      font-size: 0.56rem !important;
+      padding: 0.5px 2.5px !important;
+      line-height: 1.2 !important;
     }
     .multi-cal-page-pattern-b .badge-pill {
-      font-size: 0.55rem !important;
+      font-size: 0.54rem !important;
       padding: 1px 2px !important;
+    }
+    .multi-cal-page-pattern-b .cal-ninku-multi-box {
+      padding: 1px 2px !important;
+    }
+    .multi-cal-page-pattern-b .cal-ninku-multi-header {
+      font-size: 0.54rem !important;
+    }
+    .multi-cal-page-pattern-b .cal-ninku-chip {
+      font-size: 0.52rem !important;
+      padding: 0 2px !important;
     }
 
   </style>
@@ -3244,41 +3255,46 @@
       return Math.round(sum * 10) / 10;
     }
 
-// ============================================================================
+    // ============================================================================
     // ガントチャートタスク・色分けパレット＆進行状況判定
     // ============================================================================
     const TASK_PALETTE = [
-      { bg: "#15803D", border: "#166534" }, // 濃緑（木工事・大工など）
-      { bg: "#0369A1", border: "#075985" }, // 濃青（設備・配管・電気）
-      { bg: "#B45309", border: "#92400E" }, // 濃茶（解体・基礎）
-      { bg: "#7C3AED", border: "#6D28D9" }, // 濃紫（サッシ・建具）
-      { bg: "#BE123C", border: "#9F1239" }, // ワイン赤（内装・クロス）
-      { bg: "#0F766E", border: "#115E59" }, // ティール青緑（外壁・塗装・屋根）
-      { bg: "#C2410C", border: "#9A3412" }, // 濃オレンジ（左官・タイル）
-      { bg: "#4338CA", border: "#3730A3" }, // インディゴ紺（クリーニング・検査）
-      { bg: "#374151", border: "#1F2937" }  // ダークスレート（その他）
+      { bg: "#15803D", border: "#166534" }, // 長友グリーン（深緑）
+      { bg: "#0369A1", border: "#075985" }, // オーシャンブルー（濃青）
+      { bg: "#6D28D9", border: "#5B21B6" }, // パープル（紫）
+      { bg: "#0F766E", border: "#115E59" }, // ティール（青緑）
+      { bg: "#4338CA", border: "#3730A3" }, // インディゴ（群青）
+      { bg: "#D97706", border: "#B45309" }, // アンバー（山吹）
+      { bg: "#C2410C", border: "#9A3412" }, // ディープオレンジ（濃橙）
+      { bg: "#BE123C", border: "#9F1239" }, // ワインレッド（深赤）
+      { bg: "#B45309", border: "#92400E" }, // ブラウン（茶）
+      { bg: "#475569", border: "#334155" }  // ダークグレー
     ];
 
-    function getTaskColorInfo(task, index) {
-      const name = (task && task.name) ? String(task.name) : "";
-      if (/解体|基礎|土工|仮設/.test(name)) return { bg: "#B45309", border: "#92400E" };
-      if (/大工|木工|下地|造作|建方|上棟/.test(name)) return { bg: "#15803D", border: "#166534" };
-      if (/給排水|配管|設備|衛生|空調|換気|水道/.test(name)) return { bg: "#0369A1", border: "#075985" };
-      if (/電気|配線|照明|分電盤/.test(name)) return { bg: "#D97706", border: "#B45309" };
-      if (/サッシ|建具|窓|ガラス|玄関|ドア/.test(name)) return { bg: "#0F766E", border: "#115E59" };
-      if (/内装|クロス|壁紙|床|フロア|CF|塗装|美装/.test(name)) return { bg: "#BE123C", border: "#9F1239" };
-      if (/外壁|サイディング|屋根|板金|防水|雨樋/.test(name)) return { bg: "#4338CA", border: "#3730A3" };
-      if (/左官|タイル|モルタル|土間/.test(name)) return { bg: "#C2410C", border: "#9A3412" };
-      if (/清掃|美装|ハウスクリーニング|仕上/.test(name)) return { bg: "#7C3AED", border: "#6D28D9" };
-      if (/検査|引渡|立会|確認/.test(name)) return { bg: "#374151", border: "#1F2937" };
+    function getTaskColorInfo(task) {
+      const rawName = (task && task.name) ? String(task.name) : "";
+      // カッコ書き（例: "(解体)"）に引っ張られないよう、カッコを除いた主工事名でグループ判定
+      const mainName = rawName.replace(/[\(（].*?[\)）]/g, "");
 
+      if (/仮設|足場/.test(mainName)) return { bg: "#475569", border: "#334155" }; // 仮設グループ：ダークグレー
+      if (/電気|配線|照明|分電盤/.test(mainName)) return { bg: "#D97706", border: "#B45309" }; // 電気グループ：アンバー山吹
+      if (/給排水|配管|衛生|水道|住宅設備|住設|空調|換気/.test(mainName)) return { bg: "#0369A1", border: "#075985" }; // 水回り・管工事グループ：オーシャンブルー
+      if (/解体|基礎|土工/.test(mainName)) return { bg: "#B45309", border: "#92400E" }; // 解体・基礎グループ：ブラウン
+      if (/大工|木工|断熱|下地|造作|建方|上棟/.test(mainName)) return { bg: "#15803D", border: "#166534" }; // 木工事・断熱グループ：長友グリーン
+      if (/金属建具|サッシ|窓|ガラス|玄関/.test(mainName)) return { bg: "#0F766E", border: "#115E59" }; // サッシ・金属建具グループ：ティール青緑
+      if (/建材|木製建具|建具|ドア/.test(mainName)) return { bg: "#6D28D9", border: "#5B21B6" }; // 建材・木製建具グループ：パープル紫
+      if (/屋根|板金|外壁|サイディング|雨樋/.test(mainName)) return { bg: "#4338CA", border: "#3730A3" }; // 屋根・外装グループ：インディゴ群青
+      if (/防水|塗装|左官|タイル|モルタル|土間/.test(mainName)) return { bg: "#C2410C", border: "#9A3412" }; // 防水・塗装・左官グループ：ディープオレンジ
+      if (/内装|クロス|壁紙|床|フロア|CF|美装|清掃|クリーニング|仕上/.test(mainName)) return { bg: "#BE123C", border: "#9F1239" }; // 内装・仕上げグループ：ワインレッド
+      if (/検査|引渡|立会|確認/.test(mainName)) return { bg: "#374151", border: "#1F2937" }; // 検査グループ：スレート
+
+      // その他の工事名も文字列ハッシュで完全固定（日や月によって絶対に色が変わらない）
       let hash = 0;
-      for (let i = 0; i < name.length; i++) {
-        hash = (hash << 5) - hash + name.charCodeAt(i);
+      for (let i = 0; i < rawName.length; i++) {
+        hash = (hash << 5) - hash + rawName.charCodeAt(i);
         hash |= 0;
       }
-      const idx = typeof index === "number" ? index : Math.abs(hash);
-      const c = TASK_PALETTE[Math.abs(idx) % TASK_PALETTE.length];
+      const c = TASK_PALETTE[Math.abs(hash) % TASK_PALETTE.length];
       return { bg: c.bg, border: c.border };
     }
 
@@ -3344,76 +3360,83 @@
         }
 
         // 工事予定バー（7曜カレンダー横バー ＆ スマホ縦リスト縦バー）
+        // ※「仮設」を含む工事は開始日と完了日のみ表示し、中日は非表示
         let ganttBarsHtml = "";
         if (showGantt && activeGantt.length > 0) {
-          if (!isMobileList) {
-            // 7曜カレンダー（マス目）：横バー表示
-            const maxShow = isPrint ? 4 : 3;
-            const shownTasks = activeGantt.slice(0, maxShow);
-            const extraCount = activeGantt.length - maxShow;
-            const bars = shownTasks.map((t, idx) => {
-              const color = getTaskColorInfo(t, idx);
+          const filteredGantt = activeGantt.filter(t => {
+            const name = (t && t.name) ? String(t.name) : "";
+            if (/仮設/.test(name)) {
               const st = getTaskDayStatus(t, ymd);
-              let radiusStyle = "border-radius:0;";
-              let iconPrefix = "";
-              let iconSuffix = "";
+              return st && (st.isStart || st.isEnd);
+            }
+            return true;
+          });
 
-              if (st) {
-                if (st.isSingle) {
-                  radiusStyle = "border-radius:4px;";
-                  iconPrefix = "▶ ";
-                  iconSuffix = " ◀";
-                } else if (st.isStart) {
-                  radiusStyle = "border-radius:4px 0 0 4px;";
-                  iconPrefix = "▶ ";
-                } else if (st.isEnd) {
-                  radiusStyle = "border-radius:0 4px 4px 0;";
-                  iconSuffix = " ◀";
+          if (filteredGantt.length > 0) {
+            if (!isMobileList) {
+              // 7曜カレンダー（マス目）：省略なし（全件表示）の横バー
+              const bars = filteredGantt.map(t => {
+                const color = getTaskColorInfo(t);
+                const st = getTaskDayStatus(t, ymd);
+                const isKasetsu = /仮設/.test(t.name || "");
+                let radiusStyle = "border-radius:0;";
+                let labelText = escapeHtml(t.name);
+
+                if (st) {
+                  if (st.isSingle) {
+                    radiusStyle = "border-radius:4px;";
+                    labelText = `▶ ${escapeHtml(t.name)} ◀`;
+                  } else if (st.isStart) {
+                    radiusStyle = "border-radius:4px 0 0 4px;";
+                    labelText = isKasetsu ? `▶ ${escapeHtml(t.name)}(開始)` : `▶ ${escapeHtml(t.name)}`;
+                  } else if (st.isEnd) {
+                    radiusStyle = "border-radius:0 4px 4px 0;";
+                    labelText = isKasetsu ? `${escapeHtml(t.name)}(完了) ◀` : `${escapeHtml(t.name)} ◀`;
+                  }
                 }
-              }
 
-              return `
-                <div class="cal-gantt-h-bar" style="background:${color.bg}; color:#FFFFFF; border-left:1px solid ${color.border}; border-right:1px solid ${color.border}; ${radiusStyle}" title="${escapeHtml(t.name)} (${t.start}〜${t.end})">
-                  ${iconPrefix}${escapeHtml(t.name)}${iconSuffix}
-                </div>
-              `;
-            }).join("");
+                return `
+                  <div class="cal-gantt-h-bar" style="background:${color.bg}; color:#FFFFFF; border-left:1px solid ${color.border}; border-right:1px solid ${color.border}; ${radiusStyle}" title="${escapeHtml(t.name)} (${t.start}〜${t.end})">
+                    ${labelText}
+                  </div>
+                `;
+              }).join("");
 
-            const extraHtml = extraCount > 0 ? `<div class="cal-gantt-h-more">+他${extraCount}件</div>` : "";
-            ganttBarsHtml = `<div class="cal-gantt-bars-container">${bars}${extraHtml}</div>`;
-          } else {
-            // スマホ縦リスト：縦バー・帯表示
-            const vbars = activeGantt.map((t, idx) => {
-              const color = getTaskColorInfo(t, idx);
-              const st = getTaskDayStatus(t, ymd);
-              let stateText = "";
-              let icon = "　";
-              if (st) {
-                if (st.isSingle) {
-                  icon = "▶";
-                  stateText = `【本日完結】 ${escapeHtml(t.name)}`;
-                } else if (st.isStart) {
-                  icon = "▶";
-                  stateText = `【開始】 ${escapeHtml(t.name)} <span style="opacity:0.85; font-size:0.75rem; font-weight:normal;">(全${st.totalDays}日間)</span>`;
-                } else if (st.isEnd) {
-                  icon = "◀";
-                  stateText = `【完了】 ${escapeHtml(t.name)} <span style="opacity:0.85; font-size:0.75rem; font-weight:normal;">(本日最終日)</span>`;
+              ganttBarsHtml = `<div class="cal-gantt-bars-container">${bars}</div>`;
+            } else {
+              // スマホ縦リスト：縦バー・帯表示
+              const vbars = filteredGantt.map(t => {
+                const color = getTaskColorInfo(t);
+                const st = getTaskDayStatus(t, ymd);
+                let stateText = "";
+                let icon = "　";
+                if (st) {
+                  if (st.isSingle) {
+                    icon = "▶";
+                    stateText = `【本日完結】 ${escapeHtml(t.name)}`;
+                  } else if (st.isStart) {
+                    icon = "▶";
+                    stateText = `【開始】 ${escapeHtml(t.name)} <span style="opacity:0.85; font-size:0.75rem; font-weight:normal;">(全${st.totalDays}日間)</span>`;
+                  } else if (st.isEnd) {
+                    icon = "◀";
+                    stateText = `【完了】 ${escapeHtml(t.name)} <span style="opacity:0.85; font-size:0.75rem; font-weight:normal;">(本日最終日)</span>`;
+                  } else {
+                    icon = "┃";
+                    stateText = `【進行中】 ${escapeHtml(t.name)} <span style="opacity:0.85; font-size:0.75rem; font-weight:normal;">(${st.currentDay}日目/全${st.totalDays}日)</span>`;
+                  }
                 } else {
-                  icon = "┃";
-                  stateText = `【進行中】 ${escapeHtml(t.name)} <span style="opacity:0.85; font-size:0.75rem; font-weight:normal;">(${st.currentDay}日目/全${st.totalDays}日)</span>`;
+                  stateText = escapeHtml(t.name);
                 }
-              } else {
-                stateText = escapeHtml(t.name);
-              }
 
-              return `
-                <div class="cal-gantt-v-bar" style="border-left:5px solid ${color.bg}; background:${color.bg}15; color:#1E293B;">
-                  <span class="vbar-badge" style="background:${color.bg}; color:#FFFFFF;">${icon}</span>
-                  <span class="vbar-title">${stateText}</span>
-                </div>
-              `;
-            }).join("");
-            ganttBarsHtml = `<div class="cal-gantt-vbars-container">${vbars}</div>`;
+                return `
+                  <div class="cal-gantt-v-bar" style="border-left:5px solid ${color.bg}; background:${color.bg}15; color:#1E293B;">
+                    <span class="vbar-badge" style="background:${color.bg}; color:#FFFFFF;">${icon}</span>
+                    <span class="vbar-title">${stateText}</span>
+                  </div>
+                `;
+              }).join("");
+              ganttBarsHtml = `<div class="cal-gantt-vbars-container">${vbars}</div>`;
+            }
           }
         }
 
@@ -3602,7 +3625,7 @@
       const optEvents = document.getElementById("multiCalOptEvents")?.checked ?? true;
       const optNotes = document.getElementById("multiCalOptNotes")?.checked ?? true;
 
-      const siteName = document.getElementById("metaSiteName")?.value || "現場工程管理";
+      const siteName = document.getElementById("metaProjectName")?.value || "現場工程管理";
       const periodText = document.getElementById("metaPeriod")?.value || "";
 
       let container = document.getElementById("multiCalPrintContainer");
@@ -3626,15 +3649,17 @@
           });
           return `
             <div class="multi-cal-page-pattern-a">
-              <div class="multi-cal-sheet-header">
-                <div>
-                  <div class="multi-cal-site-title">🏠 ${escapeHtml(siteName)} 工程カレンダー</div>
-                  <div class="multi-cal-site-period">全体工期：${escapeHtml(periodText)}</div>
+              <div class="multi-cal-zoom-box">
+                <div class="multi-cal-sheet-header">
+                  <div>
+                    <div class="multi-cal-site-title">🏠 ${escapeHtml(siteName)} 工程カレンダー</div>
+                    <div class="multi-cal-site-period">全体工期：${escapeHtml(periodText)}</div>
+                  </div>
+                  <div class="multi-cal-month-title">${item.year}年 ${item.month}月 <span style="font-size:0.9rem; font-weight:normal;">(R${item.year - 2018}.${item.month})</span></div>
                 </div>
-                <div class="multi-cal-month-title">${item.year}年 ${item.month}月 <span style="font-size:0.9rem; font-weight:normal;">(R${item.year - 2018}.${item.month})</span></div>
-              </div>
-              <div class="multi-cal-grid-wrapper">
-                <div class="calendar-grid">${res.html}</div>
+                <div class="multi-cal-grid-wrapper">
+                  <div class="calendar-grid">${res.html}</div>
+                </div>
               </div>
             </div>
           `;
@@ -3669,24 +3694,26 @@
 
           printHtml += `
             <div class="multi-cal-page-pattern-b">
-              <div class="multi-cal-sheet-header">
-                <div>
-                  <div class="multi-cal-site-title">🏠 ${escapeHtml(siteName)} 工程カレンダー</div>
-                  <div class="multi-cal-site-period">全体工期：${escapeHtml(periodText)}</div>
+              <div class="multi-cal-zoom-box">
+                <div class="multi-cal-sheet-header">
+                  <div>
+                    <div class="multi-cal-site-title">🏠 ${escapeHtml(siteName)} 工程カレンダー</div>
+                    <div class="multi-cal-site-period">全体工期：${escapeHtml(periodText)}</div>
+                  </div>
+                  <div class="multi-cal-month-title">${m1.year}年${m1.month}月${title2}</div>
                 </div>
-                <div class="multi-cal-month-title">${m1.year}年${m1.month}月${title2}</div>
-              </div>
-              <div class="multi-cal-b-grid">
-                <div class="multi-cal-grid-wrapper">
-                  <div style="font-weight:bold; font-size:0.95rem; color:#0F766E; margin-bottom:4px;">📅 ${m1.year}年 ${m1.month}月</div>
-                  <div class="calendar-grid">${res1.html}</div>
+                <div class="multi-cal-b-grid">
+                  <div class="multi-cal-grid-wrapper">
+                    <div style="font-weight:bold; font-size:0.92rem; color:#0F766E; margin-bottom:3px;">📅 ${m1.year}年 ${m1.month}月</div>
+                    <div class="calendar-grid">${res1.html}</div>
+                  </div>
+                  ${m2 ? `
+                  <div class="multi-cal-grid-wrapper">
+                    <div style="font-weight:bold; font-size:0.92rem; color:#0F766E; margin-bottom:3px;">📅 ${m2.year}年 ${m2.month}月</div>
+                    <div class="calendar-grid">${calHtml2}</div>
+                  </div>
+                  ` : `<div style="flex:1;"></div>`}
                 </div>
-                ${m2 ? `
-                <div class="multi-cal-grid-wrapper">
-                  <div style="font-weight:bold; font-size:0.95rem; color:#0F766E; margin-bottom:4px;">📅 ${m2.year}年 ${m2.month}月</div>
-                  <div class="calendar-grid">${calHtml2}</div>
-                </div>
-                ` : `<div style="flex:1;"></div>`}
               </div>
             </div>
           `;
@@ -3698,6 +3725,18 @@
 
       document.body.classList.add("multi-cal-printing");
 
+      // 各ページがA4横1枚（最大665px）に必ず収まるよう自動縮小フィット（オートスケール）を計算
+      const zoomBoxes = container.querySelectorAll(".multi-cal-zoom-box");
+      const maxPageHeightPx = 665;
+      zoomBoxes.forEach(boxEl => {
+        boxEl.style.zoom = "1";
+        const actualH = boxEl.scrollHeight;
+        if (actualH > maxPageHeightPx) {
+          const ratio = Math.max(0.45, Math.min(1, maxPageHeightPx / actualH));
+          boxEl.style.zoom = ratio.toFixed(3);
+        }
+      });
+
       const cleanup = () => {
         document.body.classList.remove("multi-cal-printing");
         window.removeEventListener("afterprint", cleanup);
@@ -3707,7 +3746,7 @@
       setTimeout(() => {
         window.print();
         setTimeout(cleanup, 2000);
-      }, 100);
+      }, 120);
     }
 
     // 日別モーダル開閉・操作

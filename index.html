@@ -3655,6 +3655,7 @@
           pushHistorySnapshot();
         }
         tasks[rowIndex][field] = value;
+      }
 
       if (field === "start") {
         const endInput = document.getElementById(`end-input-${rowIndex}`);
@@ -3672,6 +3673,7 @@
     }
 
     function addNewTaskRow() {
+      pushHistorySnapshot();
       const newId = tasks.length > 0 ? Math.max(...tasks.map(t => t.id)) + 1 : 1;
       tasks.push({ id: newId, name: "新規工事項目", start: "", end: "" });
       renderTable();
@@ -3682,7 +3684,8 @@
     function removeTaskRow(rowIndex) {
       if (tasks.length <= 1) return;
       const targetName = tasks[rowIndex].name || "この工程行";
-      if (!confirm(`「${targetName}」を削除してもよろしいですか？`)) return;
+      if (!confirm(`「${targetName}」を削除してもよろしいですか？\n（※削除後も Ctrl+Z または「↶戻す」で復元できます）`)) return;
+      pushHistorySnapshot();
       tasks.splice(rowIndex, 1);
       renderTable();
       saveState();
@@ -4355,6 +4358,7 @@
 
     function quickAddDayEvent(type, text) {
       if (!activeModalYmd) return;
+      pushHistorySnapshot();
       const rec = ensureDailyRecord(activeModalYmd);
       rec.events.push({
         id: "ev_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
@@ -4370,6 +4374,7 @@
 
     function addCustomDayEvent() {
       if (!activeModalYmd) return;
+      pushHistorySnapshot();
       const typeEl = document.getElementById("customEventType");
       const textEl = document.getElementById("customEventText");
       const text = (textEl?.value || "").trim();
@@ -4393,6 +4398,7 @@
 
     function toggleDayEventArranged(idx) {
       if (!activeModalYmd) return;
+      pushHistorySnapshot();
       const rec = ensureDailyRecord(activeModalYmd);
       if (!rec.events[idx]) return;
       rec.events[idx].arranged = !rec.events[idx].arranged;
@@ -4403,6 +4409,7 @@
 
     function removeDayEvent(idx) {
       if (!activeModalYmd) return;
+      pushHistorySnapshot();
       const rec = ensureDailyRecord(activeModalYmd);
       if (!rec.events[idx]) return;
       rec.events.splice(idx, 1);
@@ -4430,6 +4437,7 @@
 
     function stepModalNinku(role, delta) {
       if (!activeModalYmd) return;
+      pushHistorySnapshot();
       const rec = ensureDailyRecord(activeModalYmd);
       const current = parseFloat(rec.ninku[role] || 0);
       const next = Math.max(0, Math.round((current + delta) * 10) / 10);

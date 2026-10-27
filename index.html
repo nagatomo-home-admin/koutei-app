@@ -1104,14 +1104,69 @@
     }
     .calendar-grid.mobile-list-mode .cal-day-cell {
       min-height: auto;
-      padding: 7px 12px;
+      padding: 8px 12px;
       border-right: none;
+      border-bottom: 1px solid #E2E8F0;
       gap: 4px;
+      background: #FFFFFF; /* スッキリ純白基準 */
+      box-sizing: border-box;
+      transition: background 0.12s ease;
     }
+    /* これからの予定日（白基準 ＋ 長友グリーン） */
     .calendar-grid.mobile-list-mode .cal-day-cell.has-entry {
-      background: #F0FDF4;
-      border-left: 4px solid var(--brand-green);
+      background: #FFFFFF;
+      border-left: 5px solid var(--brand-green);
       padding: 10px 12px;
+    }
+    .calendar-grid.mobile-list-mode .cal-day-cell.is-future.has-entry {
+      background: #FFFFFF;
+      border-left: 5px solid var(--brand-green);
+    }
+    /* 経過した日（過去：落ち着いた薄グレー ＋ スレートグレー） */
+    .calendar-grid.mobile-list-mode .cal-day-cell.is-past {
+      background: #F8FAFC !important;
+    }
+    .calendar-grid.mobile-list-mode .cal-day-cell.is-past.has-entry {
+      background: #F1F5F9 !important; /* 経過がひと目でわかる落ち着いた薄グレー */
+      border-left: 5px solid #94A3B8 !important; /* スレートグレー */
+    }
+    .calendar-grid.mobile-list-mode .cal-day-cell.is-past .cal-day-num {
+      color: #64748B;
+    }
+    /* 本日（今日：特別なクリームイエロー ＋ ゴールド強調） */
+    .calendar-grid.mobile-list-mode .cal-day-cell.is-today {
+      background: #FEFCE8 !important;
+      border-left: 6px solid #EAB308 !important;
+      box-shadow: 0 0 0 1px #FDE047 inset;
+      padding: 10px 12px;
+    }
+    .calendar-grid.mobile-list-mode .cal-day-cell.is-today .cal-day-num {
+      color: #854D0E;
+      font-weight: 800;
+    }
+    .today-chip {
+      background: #EAB308;
+      color: #FFFFFF;
+      font-size: 0.68rem;
+      font-weight: bold;
+      padding: 1px 6px;
+      border-radius: 99px;
+      margin-left: 5px;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1.2;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+    }
+    /* 7曜マンスリーグリッド（PCマス目）の過去・今日・未来 */
+    .calendar-grid:not(.mobile-list-mode) .cal-day-cell.is-past {
+      background: #F8FAFC;
+    }
+    .calendar-grid:not(.mobile-list-mode) .cal-day-cell.is-today {
+      background: #FEFCE8;
+      box-shadow: 0 0 0 2px #EAB308 inset;
+    }
+    .calendar-grid:not(.mobile-list-mode) .cal-day-cell.is-future {
+      background: #FFFFFF;
     }
     .calendar-grid.mobile-list-mode .cal-day-top {
       justify-content: flex-start;
@@ -4109,10 +4164,18 @@
       let monthTotalNinku = 0;
       const periodDates = parsePeriodStringDates(document.getElementById("metaPeriod")?.value || "");
 
+      const _calNow = new Date();
+      const _todayYmd = `${_calNow.getFullYear()}-${String(_calNow.getMonth() + 1).padStart(2, "0")}-${String(_calNow.getDate()).padStart(2, "0")}`;
+
       for (let day = 1; day <= daysInMonth; day++) {
         const ymd = `${targetYear}-${String(targetMonth).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
         const dow = new Date(targetYear, targetMonth - 1, day).getDay();
         const dowCls = dow === 0 ? "cal-day-sun" : (dow === 6 ? "cal-day-sat" : "");
+
+        const isPast = ymd < _todayYmd;
+        const isToday = ymd === _todayYmd;
+        const timeCls = isPast ? "is-past" : (isToday ? "is-today" : "is-future");
+        const todayBadge = isToday ? `<span class="today-chip">本日</span>` : "";
 
         const rec = dailyRecords[ymd] || { weather: "", workNote: "", events: [], ninku: {} };
         const activeGantt = getActiveGanttTasksForDate(ymd);
@@ -4291,9 +4354,9 @@
         const clickAttr = isPrint ? "" : `onclick="openDailyModal('${ymd}')"`;
 
         html += `
-          <div class="cal-day-cell ${dowCls} ${entryCls}" ${clickAttr}>
+          <div class="cal-day-cell ${dowCls} ${entryCls} ${timeCls}" ${clickAttr}>
             <div class="cal-day-top">
-              <span class="cal-day-num">${day}日<span style="font-size:0.74rem; font-weight:normal; margin-left:2px;">(${dows[dow]})</span></span>
+              <span class="cal-day-num">${day}日<span style="font-size:0.74rem; font-weight:normal; margin-left:2px;">(${dows[dow]})</span>${todayBadge}</span>
               <span class="cal-weather">${escapeHtml(rec.weather || "")}</span>
             </div>
             ${milestoneHtml}

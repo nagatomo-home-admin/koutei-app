@@ -2114,6 +2114,7 @@
     <div class="toolbar-right">
       <button type="button" class="btn gantt-only-ctrl" onclick="saveBaselineSnapshot()" title="現在の各工事の開始日・終了日を『着工時の当初予定』としてワンタッチで記憶します" style="background:#EFF6FF; color:#1D4ED8; border-color:#93C5FD; font-weight:bold;">📌 当初予定を記憶</button>
       <button type="button" class="btn gantt-only-ctrl" id="btnToggleBaselineCompare" onclick="toggleBaselineCompare()" title="記憶した『着工時の当初予定』と現在の工程表を2段で重ねて比較表示します">👁️ 当初予定と比較：OFF</button>
+      <span id="baselineDateBadge" class="gantt-only-ctrl" style="display:none; font-size:0.75rem; color:#1D4ED8; font-weight:bold; padding:4px 8px; border-radius:4px; background:#EFF6FF; border:1px solid #BFDBFE;" title="着工時に記憶した当初予定の日時です">📌 記憶日: 2026/09/26 14:30</span>
       <button type="button" class="btn gantt-only-ctrl" onclick="addNewTaskRow()">＋ 工程追加</button>
       <button type="button" class="btn btn-accent" onclick="document.getElementById('csvFileInput').click()" title="保存したCSVファイルを読み込んで全体工程・カレンダー予定・人工・打合せメモを復元します">
         📂 CSV読込
@@ -2679,6 +2680,7 @@
       { id: 16, name: "給排水衛生工事",       start: "2027-01-15", end: "2027-01-30", baseStart: "2027-01-15", baseEnd: "2027-01-30" }
     ];
     let showBaselineCompare = false;
+    let baselineSavedAt = "2026-09-26T14:30:00.000Z";
 
     // アプリケーション状態
     let activeMainTab = "gantt";      // 'gantt' | 'calendar' | 'meetings' | 'summary'
@@ -3192,6 +3194,16 @@
     }
 
     // 当初予定（基準計画）の記憶・比較機能
+    function getBaselinePeriodSummary() {
+      let minStart = "";
+      let maxEnd = "";
+      tasks.forEach(t => {
+        if (t.baseStart && (!minStart || t.baseStart < minStart)) minStart = t.baseStart;
+        if (t.baseEnd && (!maxEnd || t.baseEnd > maxEnd)) maxEnd = t.baseEnd;
+      });
+      return { minStart, maxEnd };
+    }
+
     function saveBaselineSnapshot() {
       const hasAnyDates = tasks.some(t => t.start && t.end);
       if (!hasAnyDates) {
@@ -3199,19 +3211,28 @@
         return;
       }
       const alreadySaved = tasks.some(t => t.baseStart || t.baseEnd);
-      const msg = alreadySaved
-        ? "📌 現在表示されている開始日・終了日を、新しい『当初予定（基準計画）』として上書き記憶しますか？"
-        : "📌 現在入力されている各工事の開始日・終了日を『着工時の当初予定』として記憶しますか？\n\n（記憶した後は、普段の工程表を実際の進行に合わせて自由に書き換えても、いつでも当初予定と比較できます）";
-      if (!confirm(msg)) return;
+      let confirmMsg = "";
+      if (alreadySaved) {
+        const savedDateStr = baselineSavedAt ? formatTimestampForPopup(baselineSavedAt) : "記録あり";
+        const bp = getBaselinePeriodSummary();
+        const periodStr = (bp.minStart && bp.maxEnd) ? `${bp.minStart} ～ ${bp.maxEnd}` : "未設定";
+        confirmMsg = `📌 すでに過去に記憶された『当初予定（基準計画）』が存在します：\n\n・過去の記憶日時：${savedDateStr}\n・過去の当初工期：${periodStr}\n\n現在の開始日・終了日で上書き記憶しますか？\n（OKを押すと、新しい日程で上書き更新されます）`;
+      } else {
+        confirmMsg = "📌 現在入力されている各工事の開始日・終了日を『着工時の当初予定（基準計画）』として記憶しますか？\n\n（記憶した後は、普段の工程表を実際の進行に合わせて自由に書き換えても、いつでも当初予定と比較できます）";
+      }
+
+      if (!confirm(confirmMsg)) return;
 
       tasks.forEach(t => {
         t.baseStart = t.start || "";
         t.baseEnd = t.end || "";
       });
+      baselineSavedAt = new Date().toISOString();
       showBaselineCompare = true;
       saveState();
       renderTable();
-      showToast("📌 着工時の当初予定を記憶し、比較表示をONにしました");
+      updateBaselineButtonUi();
+      showToast(`📌 着工時の当初予定を新しく記憶しました（記憶日時：${formatTimestampForPopup(baselineSavedAt)}）`, 4000);
     }
 
     function toggleBaselineCompare() {
@@ -3222,6 +3243,7 @@
             t.baseStart = t.start || "";
             t.baseEnd = t.end || "";
           });
+          baselineSavedAt = new Date().toISOString();
           showBaselineCompare = true;
         } else {
           return;
@@ -3231,7 +3253,16 @@
       }
       saveState();
       renderTable();
-      showToast(showBaselineCompare ? "👁️ 当初予定との比較表示をONにしました" : "🙈 当初予定との比較表示をOFFにしました");
+      updateBaselineButtonUi();
+
+      if (showBaselineCompare) {
+        const savedDateStr = baselineSavedAt ? formatTimestampForPopup(baselineSavedAt) : "記録あり";
+        const bp = getBaselinePeriodSummary();
+        const periodStr = (bp.minStart && bp.maxEnd) ? ` ／ 当初工期：${bp.minStart}～${bp.maxEnd}` : "";
+        showToast(`👁️ 当初予定と比較表示中（記憶日時：${savedDateStr}${periodStr}）`, 4500);
+      } else {
+        showToast("🙈 当初予定との比較表示をOFFにしました");
+      }
     }
 
     function updateBaselineButtonUi() {
@@ -3240,6 +3271,17 @@
         btn.textContent = showBaselineCompare ? "👁️ 当初予定と比較：ON" : "👁️ 当初予定と比較：OFF";
         btn.classList.toggle("btn-accent", showBaselineCompare);
       }
+      const badge = document.getElementById("baselineDateBadge");
+      if (badge) {
+        const hasBaseline = tasks.some(t => t.baseStart && t.baseEnd);
+        if (hasBaseline && baselineSavedAt) {
+          badge.style.display = "inline-block";
+          badge.textContent = `📌 記憶日: ${formatTimestampForPopup(baselineSavedAt).split(" ")[0]}`;
+          badge.title = `当初予定の記憶日時：${formatTimestampForPopup(baselineSavedAt)}`;
+        } else {
+          badge.style.display = "none";
+        }
+      }
       const gTable = document.getElementById("ganttTable");
       if (gTable) {
         gTable.classList.toggle("compare-baseline-mode", showBaselineCompare);
@@ -3247,6 +3289,7 @@
     }
 
     function calcBaselineDiffInfo(task) {
+
       if (!task || !task.baseStart || !task.baseEnd) return null;
       const baseDays = calcDaysInclusive(task.baseStart, task.baseEnd);
       const isSame = (task.start === task.baseStart && task.end === task.baseEnd);
@@ -4802,6 +4845,7 @@
         displayMode,
         calShowGanttTags,
         showBaselineCompare,
+        baselineSavedAt,
         tasks,
         dailyRecords,
         meetings,
@@ -4840,6 +4884,11 @@
       }
       if (typeof state.showBaselineCompare === "boolean") {
         showBaselineCompare = state.showBaselineCompare;
+      }
+      if (state.baselineSavedAt) {
+        baselineSavedAt = state.baselineSavedAt;
+      } else if ((state.meta?.projectName || "").includes("岩澤")) {
+        baselineSavedAt = "2026-09-26T14:30:00.000Z";
       }
       tasks = (Array.isArray(state.tasks) && state.tasks.length > 0)
         ? JSON.parse(JSON.stringify(state.tasks))

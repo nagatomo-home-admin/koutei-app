@@ -1875,10 +1875,125 @@
       }
     }
 
+    /* スマホ折りたたみヘッダー切替ボタン */
+    .btn-cloud-toggle-mobile {
+      display: none;
+    }
+
+    /* テーブル横スクロール対応ラッパー */
+    .summary-table-scroll-wrap {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-bottom: 8px;
+    }
+    .ninku-tables-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
     /* --------------------------------------------------------------------------
        ブレークポイント2: タブレット縦向き ＆ 狭幅（幅 900px 以下）
        -------------------------------------------------------------------------- */
     @media screen and (max-width: 900px) {
+      .btn-cloud-toggle-mobile {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.28);
+        color: #FFFFFF;
+        border: 1px solid rgba(255, 255, 255, 0.45);
+        border-radius: 6px;
+        padding: 4px 7px;
+        font-size: 0.72rem;
+        font-weight: bold;
+        cursor: pointer;
+        white-space: nowrap;
+        height: 28px;
+        flex-shrink: 0;
+      }
+      .btn-cloud-toggle-mobile:hover {
+        background: rgba(0, 0, 0, 0.45);
+      }
+
+      /* スマホ固定バー1段折りたたみ状態 (.mobile-collapsed) */
+      .app-sticky-header.mobile-collapsed {
+        padding: 1px 0 0 0 !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12) !important;
+      }
+      .app-sticky-header.mobile-collapsed .cloud-sync-bar {
+        margin-bottom: 1px !important;
+        padding: 3px 6px !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        min-height: 34px !important;
+      }
+      .app-sticky-header.mobile-collapsed .cloud-bar-left-col {
+        width: auto !important;
+        flex: 1 1 auto !important;
+      }
+      .app-sticky-header.mobile-collapsed .cloud-bar-left {
+        flex-wrap: nowrap !important;
+        gap: 4px !important;
+      }
+      .app-sticky-header.mobile-collapsed .project-picker-btn {
+        max-width: 135px !important;
+        font-size: 0.72rem !important;
+        padding: 3px 6px !important;
+      }
+      .app-sticky-header.mobile-collapsed .cloud-bar-left > .btn-cloud,
+      .app-sticky-header.mobile-collapsed .cloud-bar-right,
+      .app-sticky-header.mobile-collapsed .toolbar {
+        display: none !important;
+      }
+      .app-sticky-header.mobile-collapsed .main-nav-tabs {
+        width: auto !important;
+        display: inline-flex !important;
+        flex-direction: row !important;
+        grid-template-columns: none !important;
+        gap: 2px !important;
+        padding: 1px !important;
+        background: transparent !important;
+      }
+      .app-sticky-header.mobile-collapsed .nav-tab-btn {
+        height: 26px !important;
+        padding: 2px 5px !important;
+        font-size: 0.74rem !important;
+        border-radius: 4px !important;
+      }
+      .app-sticky-header.mobile-collapsed .nav-tab-btn .tab-text-full {
+        display: none !important;
+      }
+      .app-sticky-header.mobile-collapsed .nav-tab-btn .tab-text-short {
+        display: inline !important;
+      }
+
+      /* 手配一覧・人工集計・LINEのスマホ幅最適化 */
+      .two-col-panel {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+        width: 100% !important;
+      }
+      .ninku-tables-grid {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+      }
+      .panel-card {
+        padding: 10px 8px !important;
+        overflow: hidden !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+      }
+      .summary-table {
+        min-width: 320px;
+        font-size: 0.76rem !important;
+      }
+      .summary-table th, .summary-table td {
+        padding: 6px 5px !important;
+      }
+
       .cloud-sync-bar {
         flex-direction: column;
         align-items: stretch;
@@ -2429,6 +2544,9 @@
           </button>
           <button type="button" class="btn-cloud" onclick="createNewSiteProject()" title="新しい現場の工程表を白紙から追加します">＋ 新規現場</button>
           <button type="button" class="btn-cloud" id="currentProjectArchiveToggleBtn" onclick="toggleCurrentProjectArchiveStatus()" title="この現場を「施工中」と「完了保管（アーカイブ）」の間で切り替えます">📦 完了へ移動</button>
+          <button type="button" class="btn-cloud-toggle-mobile" id="btnToggleMobileHeader" onclick="toggleMobileHeaderCollapse()" title="スマホ固定バーを1段に折りたたみ／展開します">
+            <span id="mobileHeaderToggleText">▲ たたむ</span>
+          </button>
         </div>
         <div class="cloud-bar-right">
           <span id="cloudSyncStatusBadge" class="cloud-status-pill" onclick="openCloudSettingsModal()" style="cursor:pointer;">⚪ 端末保存（クラウド未設定）</span>
@@ -2441,16 +2559,16 @@
       <!-- 右側：メイン4画面切替ナビゲーションタブ（PC/タブレット横は2段2列統合、タブレット縦・スマホは下段へ自動配置） -->
       <div class="main-nav-tabs no-print" id="mainNavTabsContainer">
         <button type="button" class="nav-tab-btn active" id="tabBtnGantt" onclick="switchMainTab('gantt')">
-          📊 全体工程表
+          📊 <span class="tab-text-full">全体工程表</span><span class="tab-text-short" style="display:none;">工程</span>
         </button>
         <button type="button" class="nav-tab-btn" id="tabBtnCalendar" onclick="switchMainTab('calendar')">
-          🗓️ 日別カレンダー・人工 <span id="badgeUnarrangedCount" class="tab-badge" style="display:none;">0</span>
+          🗓️ <span class="tab-text-full">日別カレンダー・人工</span><span class="tab-text-short" style="display:none;">カレンダー</span> <span id="badgeUnarrangedCount" class="tab-badge" style="display:none;">0</span>
         </button>
         <button type="button" class="nav-tab-btn" id="tabBtnMeetings" onclick="switchMainTab('meetings')">
-          🤝 打合せ変更・📷写真 <span id="badgeUntoldCount" class="tab-badge" style="display:none;">0</span>
+          🤝 <span class="tab-text-full">打合せ変更・📷写真</span><span class="tab-text-short" style="display:none;">打合せ</span> <span id="badgeUntoldCount" class="tab-badge" style="display:none;">0</span>
         </button>
         <button type="button" class="nav-tab-btn" id="tabBtnSummary" onclick="switchMainTab('summary')">
-          📈 手配一覧・人工集計・📲LINE
+          📈 <span class="tab-text-full">手配一覧・人工集計・📲LINE</span><span class="tab-text-short" style="display:none;">LINE</span>
         </button>
       </div>
     </div>
@@ -2740,6 +2858,9 @@
             <label style="font-size:0.8rem; font-weight:bold;">
               <input type="checkbox" id="lineIncludeMeetings" checked onchange="generateLineMessage()"> 🤝 お客様変更事項を含める
             </label>
+            <label style="font-size:0.8rem; font-weight:bold; color:#0F6835;">
+              <input type="checkbox" id="lineUpcomingOnly" checked onchange="generateLineMessage()"> 📅 直近2週間の予定のみ（過去日を自動除外）
+            </label>
             <button type="button" class="btn btn-primary" onclick="copyLineMessage()">📋 LINE連絡文をコピー</button>
           </div>
           <textarea id="lineMessageOutput" rows="16" style="width:100%; font-family:inherit; font-size:0.84rem; padding:10px; border:1px solid var(--border-color); border-radius:6px; background:#F8FAFC; line-height:1.5;" readonly></textarea>
@@ -2794,7 +2915,8 @@
             <button type="button" class="quick-chip" onclick="quickAddDayEvent('worker', '防水・塗装業者 入場')">👷 塗装・防水入る</button>
             <button type="button" class="quick-chip" onclick="quickAddDayEvent('worker', '内装（クロス・床）入場')">👷 内装クロス入る</button>
             <button type="button" class="quick-chip" onclick="quickAddDayEvent('worker', '左官業者 入場')">👷 左官入る</button>
-            <button type="button" class="quick-chip" onclick="quickAddDayEvent('inspect', 'お施主様 現場打合せ・確認')">🚩 施主打合せ</button>
+            <button type="button" class="quick-chip" onclick="quickAddDayEvent('inspect', 'お施主様 現場打合せ・確認')">🚩 現場打合せ</button>
+            <button type="button" class="quick-chip" onclick="quickAddDayEvent('meeting_hq', 'お施主様 本社打合せ・確認')">🏢 本社打合せ</button>
             <button type="button" class="quick-chip" onclick="quickAddDayEvent('inspect', '社内検査・完了確認')">🚩 社内検査</button>
           </div>
 
@@ -2802,7 +2924,8 @@
             <select id="customEventType" class="month-picker-input">
               <option value="delivery">📦 納品・搬入</option>
               <option value="worker">👷 職人入場予定</option>
-              <option value="inspect">🚩 検査・打合せ</option>
+              <option value="inspect">🚩 現場打合せ・検査</option>
+              <option value="meeting_hq">🏢 本社打合せ</option>
             </select>
             <input type="text" id="customEventText" class="internal-memo-input" placeholder="自由入力（例：AM9:00 LIXILキッチン搬入、〇〇電工2名）" style="flex:1;">
             <button type="button" class="btn btn-accent" onclick="addCustomDayEvent()">＋ 予定追加</button>
@@ -3716,6 +3839,20 @@
     }
 
     // ツールバーのスマホ用「その他」アコーディオン展開・格納
+    // スマホ用固定ヘッダー 1段折りたたみ／全展開トグル
+    function toggleMobileHeaderCollapse() {
+      const header = document.getElementById("appStickyHeader");
+      const btnText = document.getElementById("mobileHeaderToggleText");
+      if (!header) return;
+      const isCollapsed = header.classList.toggle("mobile-collapsed");
+      if (btnText) {
+        btnText.textContent = isCollapsed ? "▼ ひらく" : "▲ たたむ";
+      }
+      try {
+        localStorage.setItem("nagatomo_mobile_header_collapsed", isCollapsed ? "1" : "0");
+      } catch (e) {}
+    }
+
     function toggleToolbarMore() {
       const area = document.getElementById("toolbarSecondaryArea");
       const btn = document.getElementById("btnToggleToolbarMore");
@@ -4307,7 +4444,7 @@
         let eventsHtml = "";
         if (showEvents && rec.events && rec.events.length > 0) {
           eventsHtml = `<div class="cal-events-list">` + rec.events.map(ev => {
-            const icon = ev.type === "delivery" ? "📦" : (ev.type === "worker" ? "👷" : "🚩");
+            const icon = ev.type === "delivery" ? "📦" : (ev.type === "worker" ? "👷" : (ev.type === "meeting_hq" ? "🏢" : "🚩"));
             const typeClass = ev.type === "delivery" ? "badge-delivery" : (ev.type === "worker" ? "badge-worker" : "badge-inspect");
             const unarrClass = !ev.arranged ? "badge-unarranged" : "";
             const statusMark = !ev.arranged ? "🔴未 " : "";
@@ -4992,7 +5129,7 @@
           upContainer.innerHTML = `<div style="font-size:0.82rem; color:var(--text-sub); padding:8px;">カレンダーに納品日や職人入場予定を書き込むと、ここに一覧表示されます。</div>`;
         } else {
           let rowsHtml = allEvents.map(item => {
-            const icon = item.type === "delivery" ? "📦 納品" : (item.type === "worker" ? "👷 職人" : "🚩 検査");
+            const icon = item.type === "delivery" ? "📦 納品" : (item.type === "worker" ? "👷 職人" : (item.type === "meeting_hq" ? "🏢 本社" : "🚩 検査"));
             const btnCls = item.arranged ? "arranged" : "unarranged";
             const btnLabel = item.arranged ? "🟢 手配・発注済" : "🔴 未手配（タップで済へ）";
             return `
@@ -5008,17 +5145,19 @@
           }).join("");
 
           upContainer.innerHTML = `
-            <table class="summary-table">
-              <thead>
-                <tr>
-                  <th>日付（タップで編集）</th>
-                  <th>種別</th>
-                  <th>予定内容（納品・職人入場・検査）</th>
-                  <th>手配ステータス</th>
-                </tr>
-              </thead>
-              <tbody>${rowsHtml}</tbody>
-            </table>
+            <div class="summary-table-scroll-wrap">
+              <table class="summary-table">
+                <thead>
+                  <tr>
+                    <th>日付（タップで編集）</th>
+                    <th>種別</th>
+                    <th>予定内容（納品・職人入場・検査）</th>
+                    <th>手配ステータス</th>
+                  </tr>
+                </thead>
+                <tbody>${rowsHtml}</tbody>
+              </table>
+            </div>
           `;
         }
       }
@@ -5059,15 +5198,19 @@
           <div style="margin-bottom:10px; font-size:1rem; font-weight:bold; color:var(--brand-green-dark); background:#E6F4EC; padding:8px 12px; border-radius:6px;">
             🏆 現場累計 合計人工： ${grandTotal} 人工
           </div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-            <table class="summary-table">
-              <thead><tr><th>職種名</th><th>累計人工</th></tr></thead>
-              <tbody>${roleRows || `<tr><td colspan="2" style="color:var(--text-sub);">まだ人工入力がありません</td></tr>`}</tbody>
-            </table>
-            <table class="summary-table">
-              <thead><tr><th>年月</th><th>月間合計</th></tr></thead>
-              <tbody>${monthRows || `<tr><td colspan="2" style="color:var(--text-sub);">まだ人工入力がありません</td></tr>`}</tbody>
-            </table>
+          <div class="ninku-tables-grid">
+            <div class="summary-table-scroll-wrap">
+              <table class="summary-table">
+                <thead><tr><th>職種名</th><th>累計人工</th></tr></thead>
+                <tbody>${roleRows || `<tr><td colspan="2" style="color:var(--text-sub);">まだ人工入力がありません</td></tr>`}</tbody>
+              </table>
+            </div>
+            <div class="summary-table-scroll-wrap">
+              <table class="summary-table">
+                <thead><tr><th>年月</th><th>月間合計</th></tr></thead>
+                <tbody>${monthRows || `<tr><td colspan="2" style="color:var(--text-sub);">まだ人工入力がありません</td></tr>`}</tbody>
+              </table>
+            </div>
           </div>
         `;
       }
@@ -5115,13 +5258,23 @@
         }
       }
 
+      const upcomingOnly = document.getElementById("lineUpcomingOnly")?.checked ?? true;
+      const _now = new Date();
+      const _todayYmd = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, "0")}-${String(_now.getDate()).padStart(2, "0")}`;
+      const _twoWeeksLater = new Date(_now.getTime() + 14 * 24 * 60 * 60 * 1000);
+      const _twoWeeksYmd = `${_twoWeeksLater.getFullYear()}-${String(_twoWeeksLater.getMonth() + 1).padStart(2, "0")}-${String(_twoWeeksLater.getDate()).padStart(2, "0")}`;
+
       // カレンダー登録済みの納品・職人予定
       const eventLines = [];
       Object.keys(dailyRecords).sort().forEach(ymd => {
+        // 直近のみがONの場合：過去日は除外、かつ2週間以内
+        if (upcomingOnly) {
+          if (ymd < _todayYmd || ymd > _twoWeeksYmd) return;
+        }
         const rec = dailyRecords[ymd];
         if (rec && Array.isArray(rec.events) && rec.events.length > 0) {
           rec.events.forEach(ev => {
-            const icon = ev.type === "delivery" ? "📦" : (ev.type === "worker" ? "👷" : "🚩");
+            const icon = ev.type === "delivery" ? "📦" : (ev.type === "worker" ? "👷" : (ev.type === "meeting_hq" ? "🏢" : "🚩"));
             const st = ev.arranged ? "（手配済）" : "（※要手配確認）";
             eventLines.push(`・${formatJapaneseYMDDow(ymd)}：${icon}${ev.text}${st}`);
           });
@@ -5129,19 +5282,27 @@
       });
 
       lines.push("");
-      lines.push(`■ 納品・職人入場・検査予定`);
+      lines.push(upcomingOnly ? `■ 直近の納品・職人入場・検査予定（2週間）` : `■ 納品・職人入場・検査予定（全期間）`);
       if (eventLines.length > 0) {
         lines.push(...eventLines);
       } else {
-        lines.push(`・（カレンダーから納品日や職人入場予定を登録するとここに自動反映されます）`);
+        lines.push(upcomingOnly ? `・（直近2週間の納品・職人入場予定はありません）` : `・（カレンダーから納品日や職人予定を登録するとここに自動反映されます）`);
       }
 
       if (includeMeetings && meetings.length > 0) {
         lines.push("");
         lines.push(`■ お客様打合せ・仕様変更事項`);
-        meetings.forEach(m => {
-          lines.push(`・[${m.category}] ${m.content}（${m.date}）`);
-        });
+        const targetMeetings = upcomingOnly
+          ? meetings.filter(m => !m.told || (m.date >= _todayYmd))
+          : meetings;
+        if (targetMeetings.length > 0) {
+          targetMeetings.forEach(m => {
+            const toldMark = m.told ? "（伝達済）" : "（※未伝達）";
+            lines.push(`・[${m.category}] ${m.content}（${m.date}）${toldMark}`);
+          });
+        } else {
+          lines.push(`・（直近の未伝達打合せ事項はありません）`);
+        }
       }
 
       lines.push("");

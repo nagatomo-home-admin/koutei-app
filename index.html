@@ -2051,12 +2051,42 @@
       line-height: 1.1 !important;
     }
 
+      /* ==========================================================================
+       上部固定ヘッダー（スクロール追従 / PC・スマホ共通）
+       ========================================================================== */
+    .app-sticky-header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: var(--bg-body, #F1F5F9);
+      padding: 6px 0 2px 0;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+      max-width: 1360px;
+      margin: 0 auto;
+    }
+    .app-sticky-header .cloud-sync-bar {
+      margin-bottom: 6px;
+    }
+    .app-sticky-header .main-nav-tabs {
+      margin-bottom: 6px;
+    }
+    .app-sticky-header .toolbar {
+      margin-bottom: 4px;
+    }
+    @media print {
+      .app-sticky-header {
+        display: none !important;
+      }
+    }
+
   </style>
 </head>
 <body>
 
-  <!-- クラウド同期 ＆ 複数現場切替バー（PC・スマホ・タブレット共通 / 印刷時は非表示） -->
-  <div class="cloud-sync-bar no-print">
+  <!-- 上部固定ヘッダー（スクロール追従 / クラウドバー・ナビタブ・ツールバー） -->
+  <header class="app-sticky-header no-print" id="appStickyHeader">
+    <!-- クラウド同期 ＆ 複数現場切替バー -->
+    <div class="cloud-sync-bar">
     <div class="cloud-bar-left">
       <img id="headerAppIconImg" class="app-icon-badge" alt="工程管理" onclick="openCloudSettingsModal()" title="専用アプリアイコン＆クラウド設定を開く">
       <button type="button" class="project-picker-btn" id="currentProjectBtn" onclick="openProjectManagerModal()" title="クリックして現場一覧・検索・完了現場の切り替え画面を開きます">
@@ -2097,6 +2127,10 @@
       <div class="toolbar-title">
         <span>🏗️ 工程管理ツール</span>
       </div>
+            <div style="display:inline-flex; gap:3px; align-items:center;">
+        <button type="button" class="btn" id="btnUndoAction" onclick="undoAction()" title="直前の操作を取り消して元に戻します (Ctrl+Z)" disabled style="opacity:0.45; padding:5px 8px; font-weight:bold; font-size:0.8rem;">↶ 戻す</button>
+        <button type="button" class="btn" id="btnRedoAction" onclick="redoAction()" title="取り消した操作をやり直します (Ctrl+Y)" disabled style="opacity:0.45; padding:5px 8px; font-weight:bold; font-size:0.8rem;">↷ やり直し</button>
+      </div>
       <label class="month-picker-label gantt-only-ctrl" title="ガントチャートの開始月を変更すると、各工事の日付カレンダーもその月以降に自動連動します">
         📅 表示開始月：
         <input type="month" id="chartStartMonth" class="month-picker-input" value="2026-10" onchange="onChartStartMonthChange(this.value)">
@@ -2127,6 +2161,7 @@
       <button type="button" class="btn btn-primary" onclick="printSinglePage()">🖨️ A4横1枚で印刷 / PDF</button>
     </div>
   </div>
+  </header>
 
   <!-- 社内専用メモバー（キーBOX・駐車・近隣注意点・Googleマップ：お客様用印刷時は自動で隠れます） -->
   <div class="internal-memo-bar no-print" id="internalMemoBar">
@@ -2681,6 +2716,122 @@
     ];
     let showBaselineCompare = false;
     let baselineSavedAt = "2026-09-26T14:30:00.000Z";
+
+    // ============================================================================
+    // 操作履歴（アンドゥ・リドゥ / Ctrl+Z & Ctrl+Y）システム
+    // ============================================================================
+    const undoStack = []; // 過去の状態スナップショット（最大30件）
+    const redoStack = []; // やり直し用のスナップショット
+    let isHistoryAction = false; // undo/redo実行中の再記録防止フラグ
+
+    function pushHistorySnapshot() {
+      if (isHistoryAction || isInitialLoadPhase || isApplyingRemoteState) return;
+      try {
+        const snapshot = JSON.stringify(getCurrentStateObject());
+        if (undoStack.length > 0 && undoStack[undoStack.length - 1] === snapshot) return;
+        undoStack.push(snapshot);
+        if (undoStack.length > 30) undoStack.shift();
+        redoStack.length = 0;
+        updateUndoRedoButtonUi();
+      } catch (e) {
+        console.error("pushHistorySnapshot error:", e);
+      }
+    }
+
+    function undoAction() {
+      if (undoStack.length === 0) {
+        showToast("⚠️ これ以上元に戻せません");
+        return;
+      }
+      isHistoryAction = true;
+      try {
+        const currentSnapshot = JSON.stringify(getCurrentStateObject());
+        redoStack.push(currentSnapshot);
+        if (redoStack.length > 30) redoStack.shift();
+
+        const prevSnapshotStr = undoStack.pop();
+        const prevState = JSON.parse(prevSnapshotStr);
+        applyStateObjectToUi(prevState);
+        saveState();
+        renderTable();
+        renderCalendar();
+        if (activeMainTab === "meetings") renderMeetingsAndPhotos();
+        if (activeMainTab === "summary") renderSummaryAndLine();
+        showToast("↶ 直前の状態に戻しました (Ctrl+Z)");
+      } catch(err) {
+        console.error("undoAction error:", err);
+      } finally {
+        isHistoryAction = false;
+        updateUndoRedoButtonUi();
+      }
+    }
+
+    function redoAction() {
+      if (redoStack.length === 0) {
+        showToast("⚠️ やり直す操作はありません");
+        return;
+      }
+      isHistoryAction = true;
+      try {
+        const currentSnapshot = JSON.stringify(getCurrentStateObject());
+        undoStack.push(currentSnapshot);
+        if (undoStack.length > 30) undoStack.shift();
+
+        const nextSnapshotStr = redoStack.pop();
+        const nextState = JSON.parse(nextSnapshotStr);
+        applyStateObjectToUi(nextState);
+        saveState();
+        renderTable();
+        renderCalendar();
+        if (activeMainTab === "meetings") renderMeetingsAndPhotos();
+        if (activeMainTab === "summary") renderSummaryAndLine();
+        showToast("↷ 操作をやり直しました (Ctrl+Y)");
+      } catch(err) {
+        console.error("redoAction error:", err);
+      } finally {
+        isHistoryAction = false;
+        updateUndoRedoButtonUi();
+      }
+    }
+
+    function updateUndoRedoButtonUi() {
+      const uBtn = document.getElementById("btnUndoAction");
+      const rBtn = document.getElementById("btnRedoAction");
+      if (uBtn) {
+        uBtn.disabled = (undoStack.length === 0);
+        uBtn.style.opacity = (undoStack.length === 0) ? "0.45" : "1";
+        uBtn.style.cursor = (undoStack.length === 0) ? "not-allowed" : "pointer";
+      }
+      if (rBtn) {
+        rBtn.disabled = (redoStack.length === 0);
+        rBtn.style.opacity = (redoStack.length === 0) ? "0.45" : "1";
+        rBtn.style.cursor = (redoStack.length === 0) ? "not-allowed" : "pointer";
+      }
+    }
+
+    // Ctrl+Z / Ctrl+Y のキーボードショートカット
+    window.addEventListener("keydown", function(e) {
+      const activeEl = document.activeElement;
+      const isInput = activeEl && (activeEl.tagName === "INPUT" || activeEl.tagName === "TEXTAREA");
+      const isDateInput = activeEl && activeEl.type === "date";
+
+      // Ctrl+Z (Mac: Cmd+Z)
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !e.shiftKey) {
+        if (!isInput || isDateInput) {
+          e.preventDefault();
+          undoAction();
+        }
+      }
+      // Ctrl+Y または Ctrl+Shift+Z (Mac: Cmd+Shift+Z)
+      else if (((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") ||
+               ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && e.shiftKey)) {
+        if (!isInput || isDateInput) {
+          e.preventDefault();
+          redoAction();
+        }
+      }
+    });
+
 
     // アプリケーション状態
     let activeMainTab = "gantt";      // 'gantt' | 'calendar' | 'meetings' | 'summary'
@@ -3499,7 +3650,11 @@
 
     function onTaskInput(rowIndex, field, value) {
       if (!tasks[rowIndex]) return;
-      tasks[rowIndex][field] = value;
+      if (tasks[rowIndex][field] !== value) {
+        if (field === 'start' || field === 'end') {
+          pushHistorySnapshot();
+        }
+        tasks[rowIndex][field] = value;
 
       if (field === "start") {
         const endInput = document.getElementById(`end-input-${rowIndex}`);

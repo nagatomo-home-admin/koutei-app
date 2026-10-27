@@ -3390,8 +3390,37 @@
                     radiusStyle = "border-radius:4px 0 0 4px;";
                     labelText = isKasetsu ? `▶ ${escapeHtml(t.name)}(開始)` : `▶ ${escapeHtml(t.name)}`;
                   } else if (st.isEnd) {
-                    radiusStyle = "border-radius:0 4px 4px 0;";
+                    radiusStyle = "border-radius:0 4px 4px 0; text-align:right;";
                     labelText = isKasetsu ? `${escapeHtml(t.name)}(完了) ◀` : `${escapeHtml(t.name)} ◀`;
+                  } else {
+                    // 中日：7日以内は無地バー、8日以上は各週の中間（水曜等）のみ工事名を表示
+                    let showMidLabel = false;
+                    if (st.totalDays >= 8) {
+                      const weekStartDay = Math.max(1, day - dow);
+                      const weekEndDay = Math.min(daysInMonth, day + (6 - dow));
+                      const startDow = new Date(targetYear, targetMonth - 1, weekStartDay).getDay();
+                      const endDow = new Date(targetYear, targetMonth - 1, weekEndDay).getDay();
+                      const weekContainsWed = (startDow <= 3 && 3 <= endDow);
+
+                      if (weekContainsWed) {
+                        if (dow === 3 && st.currentDay >= 3 && (st.totalDays - st.currentDay) >= 2) {
+                          showMidLabel = true;
+                        }
+                      } else {
+                        const midWeekDay = Math.floor((weekStartDay + weekEndDay) / 2);
+                        if (day === midWeekDay && st.currentDay >= 3 && (st.totalDays - st.currentDay) >= 2) {
+                          showMidLabel = true;
+                        }
+                      }
+                    }
+
+                    if (showMidLabel) {
+                      radiusStyle = "border-radius:0; text-align:center;";
+                      labelText = escapeHtml(t.name);
+                    } else {
+                      radiusStyle = "border-radius:0;";
+                      labelText = "&nbsp;";
+                    }
                   }
                 }
 

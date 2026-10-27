@@ -133,59 +133,72 @@
     /* 操作ツールバー（印刷時は非表示） */
     .toolbar {
       max-width: 1360px;
-      margin: 0 auto 12px auto;
+      margin: 0 auto 4px auto;
       background: #FFFFFF;
       border: 1px solid var(--border-light);
-      border-left: 5px solid var(--brand-green);
-      border-radius: 8px;
-      padding: 10px 14px;
+      border-left: 4px solid var(--brand-green);
+      border-radius: 6px;
+      padding: 4px 8px;
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: row;
       align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-    }
-
-    .toolbar-left,
-    .toolbar-right {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .toolbar-title {
-      font-weight: bold;
-      font-size: 0.95rem;
-      color: var(--brand-green-dark);
-      display: flex;
-      align-items: center;
+      justify-content: flex-start;
       gap: 6px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      min-height: 38px;
+      white-space: nowrap;
+    }
+
+    .toolbar-main-bar {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+
+    .toolbar-secondary-area {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+
+    .toolbar-btn-group {
+      display: inline-flex;
+      gap: 2px;
+      align-items: center;
+    }
+
+    .btn-more-toggle {
+      display: none;
     }
 
     .month-picker-label {
-      font-size: 0.82rem;
+      font-size: 0.78rem;
       font-weight: bold;
       color: var(--text-sub);
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
       background: #F8FAFC;
-      padding: 5px 10px;
+      padding: 2px 6px;
       border: 1px solid var(--border-light);
-      border-radius: 6px;
+      border-radius: 5px;
+      height: 28px;
+      box-sizing: border-box;
     }
 
     .month-picker-input {
       border: 1px solid var(--border-light);
       border-radius: 4px;
-      padding: 3px 6px;
-      font-size: 0.82rem;
+      padding: 1px 4px;
+      font-size: 0.78rem;
       font-weight: bold;
       color: var(--text-main);
       background: #FFFFFF;
       cursor: pointer;
+      height: 22px;
+      box-sizing: border-box;
     }
 
     .btn {
@@ -193,20 +206,30 @@
       border: 1px solid var(--border-light);
       background: #FFFFFF;
       color: var(--text-main);
-      font-size: 0.82rem;
+      font-size: 0.78rem;
       font-weight: bold;
-      padding: 7px 12px;
-      border-radius: 6px;
+      padding: 4px 8px;
+      border-radius: 5px;
       transition: all 0.15s ease;
       display: inline-flex;
       align-items: center;
-      gap: 5px;
+      gap: 4px;
       white-space: nowrap;
+      height: 28px;
+      box-sizing: border-box;
+      line-height: 1;
     }
 
     .btn:hover {
       background: #F8FAFC;
       border-color: var(--brand-green);
+    }
+
+    .btn-icon-only {
+      padding: 3px 6px !important;
+      min-width: 26px;
+      font-size: 0.82rem !important;
+      justify-content: center;
     }
 
     .btn-primary {
@@ -229,10 +252,87 @@
       background: #D1FAE5;
     }
 
-    .btn-mode.active {
-      background: var(--brand-green-light);
-      color: var(--brand-green-dark);
-      border-color: var(--brand-green);
+    .btn-success-subtle {
+      background: #ECFDF5;
+      color: #047857;
+      border-color: #A7F3D0;
+      font-weight: bold;
+    }
+
+    .btn-success-subtle:hover {
+      background: #D1FAE5;
+      border-color: #059669;
+    }
+
+    .btn-baseline-save {
+      background: #EFF6FF;
+      color: #1D4ED8;
+      border-color: #93C5FD;
+      font-weight: bold;
+    }
+
+    .btn-baseline-save:hover {
+      background: #DBEAFE;
+      border-color: #2563EB;
+    }
+
+    /* 一体型セグメント切り替え（1日単位・上中下旬・縦カード） */
+    .mode-segment-group {
+      display: inline-flex;
+      border: 1px solid var(--border-light);
+      border-radius: 5px;
+      overflow: hidden;
+      background: #F1F5F9;
+      padding: 1px;
+      gap: 1px;
+      height: 28px;
+      box-sizing: border-box;
+    }
+
+    .mode-segment-group .btn-segment {
+      border: none;
+      border-radius: 4px;
+      padding: 2px 7px;
+      font-size: 0.75rem;
+      background: transparent;
+      color: var(--text-sub);
+      height: 24px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+
+    .mode-segment-group .btn-segment:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    .mode-segment-group .btn-segment.active {
+      background: var(--brand-green);
+      color: #FFFFFF;
+      font-weight: bold;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+    }
+
+    .toolbar-csv-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    #baselineDateBadge {
+      font-size: 0.72rem;
+      color: #1D4ED8;
+      font-weight: bold;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #EFF6FF;
+      border: 1px solid #BFDBFE;
+      white-space: nowrap;
+      height: 24px;
+      box-sizing: border-box;
+      display: inline-flex;
+      align-items: center;
     }
 
     /* 社内専用メモバー（キーBOX・駐車・Googleマップ：1行1項目で大きく表示・印刷時は自動非表示） */
@@ -1686,24 +1786,124 @@
       gap: 4px;
     }
 
-    @media screen and (max-width: 768px) {
-      .cloud-sync-bar {
-        padding: 7px 8px;
+    @media screen and (max-width: 900px) {
+      .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 4px 6px;
+        gap: 4px;
+        white-space: normal;
+      }
+      .toolbar-main-bar {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 4px;
+      }
+      .toolbar-main-bar .btn {
+        flex: 1 1 auto;
+        padding: 5px 3px;
+        font-size: 0.74rem;
+        height: 32px;
+        justify-content: center;
+      }
+      .toolbar-main-bar .toolbar-btn-group {
+        display: inline-flex;
+        gap: 2px;
+        flex: 0 0 auto;
+      }
+      .toolbar-main-bar .toolbar-btn-group .btn {
+        flex: 0 0 28px;
+        height: 32px;
+        padding: 0;
+      }
+      .btn-more-toggle {
+        display: inline-flex !important;
+        flex: 0 0 auto;
+        background: #F1F5F9;
+        border-color: #CBD5E1;
+        color: #334155;
+        font-weight: bold;
+        padding: 5px 6px;
+        height: 32px;
+      }
+      .btn-more-toggle.is-active {
+        background: #E2E8F0;
+        color: var(--brand-green-dark);
+        border-color: var(--brand-green);
+      }
+      .toolbar-secondary-area {
+        display: none;
+        flex-direction: column;
+        width: 100%;
         gap: 6px;
+        padding: 8px 6px 4px 6px;
+        border-top: 1px dashed #CBD5E1;
+        background: #F8FAFC;
+        border-radius: 4px;
+        margin-top: 2px;
+      }
+      .toolbar-secondary-area.is-open {
+        display: flex !important;
+      }
+      .toolbar-secondary-area .month-picker-label {
+        width: 100%;
+        justify-content: space-between;
+        height: 32px;
+      }
+      .toolbar-secondary-area .mode-segment-group {
+        width: 100%;
+        display: flex;
+        height: 32px;
+      }
+      .toolbar-secondary-area .mode-segment-group .btn-segment {
+        flex: 1;
+        text-align: center;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .toolbar-secondary-area .btn-baseline-save {
+        width: 100%;
+        height: 32px;
+        justify-content: center;
+      }
+      .toolbar-secondary-area .toolbar-csv-group {
+        width: 100%;
+        display: flex;
+        gap: 4px;
+      }
+      .toolbar-secondary-area .toolbar-csv-group .btn {
+        flex: 1;
+        height: 32px;
+        justify-content: center;
+      }
+    }
+
+    @media screen and (max-width: 768px) {
+      .app-sticky-header {
+        padding: 2px 0 1px 0;
+      }
+      .cloud-sync-bar {
+        padding: 4px 6px;
+        gap: 4px;
+        margin-bottom: 3px !important;
       }
       .cloud-bar-left,
       .cloud-bar-right {
         width: 100%;
         justify-content: flex-start;
-        gap: 5px;
+        gap: 4px;
       }
       .project-picker-btn {
-        flex: 1 1 calc(100% - 44px);
+        flex: 1 1 calc(100% - 38px);
         min-width: 0;
-        max-width: calc(100% - 44px);
+        max-width: calc(100% - 38px);
         overflow: hidden;
-        font-size: 0.8rem;
-        padding: 6px 8px;
+        font-size: 0.76rem;
+        padding: 4px 6px;
         justify-content: space-between;
       }
       .project-picker-name {
@@ -1712,8 +1912,18 @@
         text-align: left;
       }
       .btn-cloud {
-        font-size: 0.74rem;
-        padding: 5px 8px;
+        font-size: 0.72rem;
+        padding: 4px 6px;
+      }
+      .main-nav-tabs {
+        padding: 3px;
+        gap: 3px;
+        margin-bottom: 3px !important;
+      }
+      .nav-tab-btn {
+        padding: 5px 3px;
+        font-size: 0.72rem;
+        border-radius: 6px;
       }
       .proj-card {
         flex-direction: column;
@@ -2122,43 +2332,38 @@
   </div>
 
   <!-- 操作ツールバー（印刷時は非表示） -->
-  <div class="toolbar no-print">
-    <div class="toolbar-left">
-      <div class="toolbar-title">
-        <span>🏗️ 工程管理ツール</span>
+  <div class="toolbar no-print" id="appMainToolbar">
+    <!-- メイン行（PC・スマホ常時表示） -->
+    <div class="toolbar-main-bar">
+      <div class="toolbar-btn-group" title="元に戻す (Ctrl+Z) / やり直し (Ctrl+Y)">
+        <button type="button" class="btn btn-icon-only" id="btnUndoAction" onclick="undoAction()" title="直前の操作を取り消して元に戻します (Ctrl+Z)" disabled style="opacity:0.45;">↶</button>
+        <button type="button" class="btn btn-icon-only" id="btnRedoAction" onclick="redoAction()" title="取り消した操作をやり直します (Ctrl+Y)" disabled style="opacity:0.45;">↷</button>
       </div>
-            <div style="display:inline-flex; gap:3px; align-items:center;">
-        <button type="button" class="btn" id="btnUndoAction" onclick="undoAction()" title="直前の操作を取り消して元に戻します (Ctrl+Z)" disabled style="opacity:0.45; padding:5px 8px; font-weight:bold; font-size:0.8rem;">↶ 戻す</button>
-        <button type="button" class="btn" id="btnRedoAction" onclick="redoAction()" title="取り消した操作をやり直します (Ctrl+Y)" disabled style="opacity:0.45; padding:5px 8px; font-weight:bold; font-size:0.8rem;">↷ やり直し</button>
-      </div>
+      <button type="button" class="btn btn-success-subtle gantt-only-ctrl" onclick="addNewTaskRow()" title="新しい工事行を追加します">＋ 工程追加</button>
+      <button type="button" class="btn gantt-only-ctrl" id="btnToggleBaselineCompare" onclick="toggleBaselineCompare()" title="記憶した『着工時の当初予定』と現在の工程表を2段で重ねて比較表示します">👁️ 比較: OFF</button>
+      <button type="button" class="btn btn-primary" onclick="printSinglePage()" title="A4横1枚で印刷 / PDF保存します">🖨️ A4印刷</button>
+      <button type="button" class="btn btn-more-toggle" id="btnToggleToolbarMore" onclick="toggleToolbarMore()" title="表示開始月、モード切替、CSV保存、当初記憶などの詳細設定を展開します">⚙️ その他 ▼</button>
+    </div>
+
+    <!-- サブ機能エリア（PCでは同一行に横並び展開、スマホでは「⚙️ その他」タップで開閉） -->
+    <div class="toolbar-secondary-area" id="toolbarSecondaryArea">
       <label class="month-picker-label gantt-only-ctrl" title="ガントチャートの開始月を変更すると、各工事の日付カレンダーもその月以降に自動連動します">
-        📅 表示開始月：
+        📅 開始月:
         <input type="month" id="chartStartMonth" class="month-picker-input" value="2026-10" onchange="onChartStartMonthChange(this.value)">
       </label>
-      <button type="button" class="btn btn-mode active gantt-only-ctrl" id="btnModeContinuous" onclick="setDisplayMode('continuous')">
-        📊 1日単位バー
-      </button>
-      <button type="button" class="btn btn-mode gantt-only-ctrl" id="btnModeJun" onclick="setDisplayMode('jun')">
-        📅 上中下旬マス
-      </button>
-      <button type="button" class="btn btn-mode gantt-only-ctrl" id="btnModeMobileCards" onclick="setDisplayMode('cards')">
-        📱 スマホ縦カード
-      </button>
-    </div>
-    <div class="toolbar-right">
-      <button type="button" class="btn gantt-only-ctrl" onclick="saveBaselineSnapshot()" title="現在の各工事の開始日・終了日を『着工時の当初予定』としてワンタッチで記憶します" style="background:#EFF6FF; color:#1D4ED8; border-color:#93C5FD; font-weight:bold;">📌 当初予定を記憶</button>
-      <button type="button" class="btn gantt-only-ctrl" id="btnToggleBaselineCompare" onclick="toggleBaselineCompare()" title="記憶した『着工時の当初予定』と現在の工程表を2段で重ねて比較表示します">👁️ 当初予定と比較：OFF</button>
-      <span id="baselineDateBadge" class="gantt-only-ctrl" style="display:none; font-size:0.75rem; color:#1D4ED8; font-weight:bold; padding:4px 8px; border-radius:4px; background:#EFF6FF; border:1px solid #BFDBFE;" title="着工時に記憶した当初予定の日時です">📌 記憶日: 2026/09/26 14:30</span>
-      <button type="button" class="btn gantt-only-ctrl" onclick="addNewTaskRow()">＋ 工程追加</button>
-      <button type="button" class="btn btn-accent" onclick="document.getElementById('csvFileInput').click()" title="保存したCSVファイルを読み込んで全体工程・カレンダー予定・人工・打合せメモを復元します">
-        📂 CSV読込
-      </button>
-      <input type="file" id="csvFileInput" accept=".csv,text/csv" style="display: none;" onchange="handleCsvFileSelect(event)">
-      <button type="button" class="btn" onclick="exportToCsv()" title="全体工程・カレンダー予定・人工・打合せメモをすべてCSVファイルに保存します">
-        📥 CSV保存
-      </button>
-      <button type="button" class="btn" onclick="resetToDefault()" title="現在表示中の現場の内容を白紙（標準16工程・日付空欄）にリセットします">↺ 白紙リセット</button>
-      <button type="button" class="btn btn-primary" onclick="printSinglePage()">🖨️ A4横1枚で印刷 / PDF</button>
+      <div class="mode-segment-group gantt-only-ctrl">
+        <button type="button" class="btn-segment active" id="btnModeContinuous" onclick="setDisplayMode('continuous')" title="1日単位バー表示">1日単位</button>
+        <button type="button" class="btn-segment" id="btnModeJun" onclick="setDisplayMode('jun')" title="上中下旬マス表示">上中下旬</button>
+        <button type="button" class="btn-segment" id="btnModeMobileCards" onclick="setDisplayMode('cards')" title="スマホ縦カード表示">縦カード</button>
+      </div>
+      <button type="button" class="btn btn-baseline-save gantt-only-ctrl" onclick="saveBaselineSnapshot()" title="現在の各工事の開始日・終了日を『着工時の当初予定』としてワンタッチで記憶します">📌 記憶</button>
+      <span id="baselineDateBadge" class="gantt-only-ctrl" style="display:none;" title="着工時に記憶した当初予定の日時です">📌 記憶済</span>
+      <div class="toolbar-csv-group">
+        <button type="button" class="btn btn-accent" onclick="document.getElementById('csvFileInput').click()" title="保存したCSVファイルを読み込んで全体工程・カレンダー予定・人工・打合せメモを復元します">📂 読込</button>
+        <input type="file" id="csvFileInput" accept=".csv,text/csv" style="display: none;" onchange="handleCsvFileSelect(event)">
+        <button type="button" class="btn" onclick="exportToCsv()" title="全体工程・カレンダー予定・人工・打合せメモをすべてCSVファイルに保存します">📥 保存</button>
+        <button type="button" class="btn" onclick="resetToDefault()" title="現在表示中の現場の内容を白紙（標準16工程・日付空欄）にリセットします">↺ リセット</button>
+      </div>
     </div>
   </div>
   </header>
@@ -3386,6 +3591,21 @@
       showToast(`📌 着工時の当初予定を新しく記憶しました（記憶日時：${formatTimestampForPopup(baselineSavedAt)}）`, 4000);
     }
 
+    // ツールバーのスマホ用「その他」アコーディオン展開・格納
+    function toggleToolbarMore() {
+      const area = document.getElementById("toolbarSecondaryArea");
+      const btn = document.getElementById("btnToggleToolbarMore");
+      if (!area || !btn) return;
+      const isOpen = area.classList.toggle("is-open");
+      if (isOpen) {
+        btn.classList.add("is-active");
+        btn.textContent = "⚙️ その他 ▲";
+      } else {
+        btn.classList.remove("is-active");
+        btn.textContent = "⚙️ その他 ▼";
+      }
+    }
+
     function toggleBaselineCompare() {
       const hasBaseline = tasks.some(t => t.baseStart && t.baseEnd);
       if (!hasBaseline) {
@@ -3419,7 +3639,7 @@
     function updateBaselineButtonUi() {
       const btn = document.getElementById("btnToggleBaselineCompare");
       if (btn) {
-        btn.textContent = showBaselineCompare ? "👁️ 当初予定と比較：ON" : "👁️ 当初予定と比較：OFF";
+        btn.textContent = showBaselineCompare ? "👁️ 比較: ON" : "👁️ 比較: OFF";
         btn.classList.toggle("btn-accent", showBaselineCompare);
       }
       const badge = document.getElementById("baselineDateBadge");

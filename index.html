@@ -2796,6 +2796,7 @@
       <div class="cal-header-bar">
         <div class="cal-month-nav">
           <button type="button" class="btn" onclick="stepCalendarMonth(-1)">◀ 前月</button>
+          <button type="button" class="btn" id="btnCalGoToday" onclick="goToCalendarCurrentMonth()" style="background:#0F6835; color:#FFFFFF; font-weight:bold; padding:4px 9px;" title="現在の月（今月）のカレンダーへ移動">今月</button>
           <div class="cal-month-title" id="calCurrentMonthLabel">2026年10月</div>
           <button type="button" class="btn" onclick="stepCalendarMonth(1)">次月 ▶</button>
           <div class="cal-toggle-group no-print" style="display:flex; gap:6px; flex-wrap:wrap;">
@@ -3333,9 +3334,10 @@
     let chartStartMs = 0;
     let chartEndMs = 0;
 
-    // カレンダー表示年月＆モード
-    let calYear = 2026;
-    let calMonth = 10;
+    // カレンダー表示年月＆モード（初期表示は現在年月・今月）
+    const _nowInit = new Date();
+    let calYear = _nowInit.getFullYear();
+    let calMonth = _nowInit.getMonth() + 1;
     let calMobileListMode = false;
     let calShowGanttTags = true;
     let activeModalYmd = "";
@@ -3572,6 +3574,10 @@
       if (tabName === "gantt") {
         renderAllBars();
       } else if (tabName === "calendar") {
+        // カレンダーを開いたときは、開いた時点の「その月（現在月）」で開く
+        const _nowCal = new Date();
+        calYear = _nowCal.getFullYear();
+        calMonth = _nowCal.getMonth() + 1;
         renderCalendar();
       } else if (tabName === "meetings") {
         renderMeetingsAndPhotos();
@@ -3759,8 +3765,7 @@
           const y = d.getFullYear();
           const m = d.getMonth() + 1;
           rebuildJunPeriods(y, m);
-          calYear = y;
-          calMonth = m;
+          // カレンダーは現在月を保つため工期開始月で上書きしない
         }
       }
       renderTable();
@@ -3778,8 +3783,6 @@
           const m = d.getMonth() + 1;
           if (y !== baseYear || m !== baseMonth) {
             rebuildJunPeriods(y, m);
-            calYear = y;
-            calMonth = m;
             renderTable();
           }
         }
@@ -3833,12 +3836,9 @@
       if (isNaN(y) || isNaN(m)) return;
 
       rebuildJunPeriods(y, m);
-      calYear = y;
-      calMonth = m;
       renderTable();
-      renderCalendar();
       saveState();
-      showToast(`📅 表示開始月を ${y}年${m}月 に変更しました`);
+      showToast(`📅 工程表の表示開始月を ${y}年${m}月 に変更しました`);
     }
 
     function setDisplayMode(mode) {
@@ -4320,6 +4320,14 @@
       const d = new Date(calYear, calMonth - 1 + delta, 1);
       calYear = d.getFullYear();
       calMonth = d.getMonth() + 1;
+      renderCalendar();
+    }
+
+    // カレンダーを現在月（今月）へジャンプ
+    function goToCalendarCurrentMonth() {
+      const now = new Date();
+      calYear = now.getFullYear();
+      calMonth = now.getMonth() + 1;
       renderCalendar();
     }
 
@@ -5725,9 +5733,11 @@
       if (state.baseYear && state.baseMonth) {
         baseYear = parseInt(state.baseYear, 10);
         baseMonth = parseInt(state.baseMonth, 10);
-        calYear = baseYear;
-        calMonth = baseMonth;
       }
+      // カレンダー表示は開いた時点の「その月（現在月）」で初期化
+      const _nowRestore = new Date();
+      calYear = _nowRestore.getFullYear();
+      calMonth = _nowRestore.getMonth() + 1;
       if (state.displayMode) {
         displayMode = state.displayMode;
       }
@@ -6528,8 +6538,6 @@
 
       tasks = loadedTasks;
       rebuildJunPeriods(newStartYear, newStartMonth);
-      calYear = newStartYear;
-      calMonth = newStartMonth;
       setDisplayMode(newMode);
       renderTable();
       renderCalendar();

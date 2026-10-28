@@ -1915,7 +1915,8 @@
     }
 
     /* =========================================================================
-       👁️ 閲覧・印刷専用モード（社員配布用: ?mode=view）スタイル
+       👷 現場入力モード（社員配布用: ?mode=view）スタイル
+       全体工程表はガッチリ保護、日別カレンダー・人工・作業メモ・写真は現場入力OK
        ========================================================================= */
     .view-only-indicator {
       display: none;
@@ -1924,7 +1925,7 @@
       display: inline-flex !important;
       align-items: center;
       gap: 4px;
-      background: #0D9488;
+      background: #0F766E;
       color: #FFFFFF;
       padding: 3px 8px;
       border-radius: 4px;
@@ -1935,32 +1936,22 @@
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     }
 
-    /* 編集専用要素・危険ボタンの完全非表示 */
+    /* 全体工程表の危険操作ボタン・行追加削除・設定・過去メモ削除の非表示 */
     body.is-view-only-mode .editor-only-ctrl,
-    body.is-view-only-mode #btnCloudSaveMain,
     body.is-view-only-mode #btnCloudSettings,
     body.is-view-only-mode #btnSaveBaseline,
     body.is-view-only-mode #btnUndoAction,
     body.is-view-only-mode #btnRedoAction,
     body.is-view-only-mode .delete-row-btn,
-    body.is-view-only-mode .daily-modal-add-form,
-    body.is-view-only-mode .daily-modal-quick-chips,
-    body.is-view-only-mode .daily-modal-weather-btns,
-    body.is-view-only-mode .ninku-controls,
-    body.is-view-only-mode .meeting-add-box,
     body.is-view-only-mode .meeting-delete-btn,
-    body.is-view-only-mode .photo-delete-btn,
-    body.is-view-only-mode .proj-manage-edit-only,
-    body.is-view-only-mode .status-toggle-btn {
+    body.is-view-only-mode .photo-delete-btn {
       display: none !important;
     }
 
-    /* 閲覧専用モード時のフォーム・テキスト入力欄の表示（平文のように美しく表示） */
+    /* 全体工程表の工程名・日付・現場基本情報のみ入力ロック（平文カード化） */
     body.is-view-only-mode .task-name-input,
     body.is-view-only-mode .date-input,
-    body.is-view-only-mode .meta-input,
-    body.is-view-only-mode .internal-memo-input,
-    body.is-view-only-mode #modalWorkNoteInput {
+    body.is-view-only-mode .meta-input {
       pointer-events: none !important;
       background: transparent !important;
       border-color: transparent !important;
@@ -2646,7 +2637,7 @@
           </button>
         </div>
         <div class="cloud-bar-right">
-          <span class="view-only-indicator">👁️ 閲覧・印刷専用（編集ロック）</span>
+          <span class="view-only-indicator">👷 現場入力モード（全体工程保護中）</span>
           <span id="cloudSyncStatusBadge" class="cloud-status-pill editor-only-ctrl" onclick="openCloudSettingsModal()" style="cursor:pointer;">⚪ 端末保存（クラウド未設定）</span>
           <button type="button" class="btn-cloud editor-only-ctrl" onclick="copyMobileHandoffUrl(true)" style="background:#0F766E; border-color:#14B8A6;" title="社員配布用の『閲覧・印刷専用URL（編集ロック）』をクリップボードにコピーします">👁️ 社員用URLコピー</button>
           <button type="button" id="btnCloudSaveMain" class="btn-cloud btn-cloud-solid" onclick="syncToCloudNow(true)" title="現在の現場データをGoogleスプレッドシートへ手動保存します（確認ポップアップが出ます）">☁️ クラウド保存</button>
@@ -3045,7 +3036,10 @@
               <button type="button" class="quick-chip" id="weatherBtnClear" onclick="setModalWeather('')">消去</button>
             </div>
           </div>
-          <textarea id="modalWorkNoteInput" rows="2" style="width:100%; font-family:inherit; font-size:0.86rem; padding:8px; border:1px solid var(--border-light); border-radius:6px;" placeholder="その日に行った作業内容や現場メモを入力（例：LDK床下地組、洗面所給排水逃げ配管完了）" oninput="onModalWorkNoteChange(this.value)"></textarea>
+          <div style="position:relative; margin-bottom:4px;">
+            <textarea id="modalWorkNoteInput" rows="2" style="width:100%; font-family:inherit; font-size:0.86rem; padding:8px 88px 8px 8px; border:1px solid var(--border-light); border-radius:6px; box-sizing:border-box;" placeholder="その日に行った作業内容や現場メモを入力（※マイクボタンで音声入力もできます）" oninput="onModalWorkNoteChange(this.value)"></textarea>
+            <button type="button" id="btnVoiceInputNote" onclick="toggleVoiceInputForNote()" style="position:absolute; right:6px; top:6px; bottom:6px; padding:0 8px; background:#10B981; color:#FFFFFF; border:none; border-radius:4px; font-size:0.75rem; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:2px;" title="話しかけるだけで文字を入力します">🎙️ 音声入力</button>
+          </div>
         </div>
 
         <!-- セクション3：👷 職種別・人工（にんく）の書き込み -->
@@ -3129,26 +3123,47 @@
           </div>
         </div>
 
-        <!-- セクション3：スマホ・タブレットへのQRコード＆リンク引き継ぎ -->
+        <!-- セクション3：👑 社長・管理者用 スマホ連携 -->
         <div class="modal-section" id="cloudHandoffSection" style="display:none; background:#EFF6FF; border-color:#93C5FD;">
           <div class="modal-section-title" style="border-bottom-color:#BFDBFE; color:#1E40AF;">
-            <span>③ 📲 スマホ・タブレットでこの現場を開く（QRコード ／ URL共有）</span>
+            <span>③ 👑 社長・管理者用 スマホ連携（全機能・編集可能）</span>
           </div>
           <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
             <div style="background:#FFFFFF; padding:8px; border-radius:10px; border:1px solid #BFDBFE; text-align:center;">
-              <img id="cloudQrImage" alt="スマホ読取用QRコード" style="width:136px; height:136px; display:block;">
-              <div style="font-size:0.7rem; color:#475569; margin-top:4px;">スマホカメラで読取</div>
+              <img id="cloudQrImage" alt="社長用QRコード" style="width:136px; height:136px; display:block;">
+              <div style="font-size:0.7rem; color:#1E40AF; font-weight:bold; margin-top:4px;">社長スマホで読取</div>
             </div>
             <div style="flex:1; min-width:220px; display:flex; flex-direction:column; gap:8px;">
               <div style="font-size:0.82rem; color:#1E3A8A; line-height:1.55;">
-                左のQRコードをスマホ・タブレットのカメラで読み取るか、下のボタンでURLをコピーしてLINEやメールで送ると、<strong>PCと全く同じ最新データが開きます！</strong>
+                社長ご自身のスマホやタブレットで<strong>全体工程表の編集・日程変更・現場管理を含めた全機能</strong>を使いたい場合はこちらを開いてください。
               </div>
               <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                <button type="button" class="btn btn-primary" onclick="copyMobileHandoffUrl(false)">📋 管理者用URL（編集可能）</button>
-                <button type="button" class="btn" onclick="copyMobileHandoffUrl(true)" style="background:#0F766E; color:#FFFFFF; font-weight:bold;">👁️ 社員用 閲覧・印刷URLをコピー（編集不可）</button>
-                <button type="button" class="btn" onclick="downloadPreconfiguredHtml()" title="クラウド接続設定が最初から埋め込まれたHTMLファイルを保存します（自社サーバーやNetlify等に置くと100%全画面＆専用アイコンで動作します）">📥 設定済みHTMLを保存</button>
+                <button type="button" class="btn btn-primary" onclick="copyMobileHandoffUrl(false)">📋 管理者用URLをコピー</button>
+                <button type="button" class="btn" onclick="downloadPreconfiguredHtml()" title="クラウド接続設定が最初から埋め込まれたHTMLファイルを保存します">📥 設定済みHTMLを保存</button>
               </div>
               <input type="text" id="cloudHandoffUrlPreview" readonly class="internal-memo-input" style="width:100%; font-size:0.74rem; color:#475569; background:#F8FAFC;" onclick="this.select()">
+            </div>
+          </div>
+        </div>
+
+        <!-- セクション4：👥 👷 社員・現場配布用 スマホ連携（QRコード＆URL共有） -->
+        <div class="modal-section" id="cloudHandoffSectionViewOnly" style="display:none; background:#F0FDF4; border-color:#86EFAC; margin-top:14px;">
+          <div class="modal-section-title" style="border-bottom-color:#BBF7D0; color:#166534;">
+            <span>④ 👥 👷 社員・現場配布用 スマホ連携（全体工程保護 ＆ 現場日報・人工入力 ＆ カレンダー直通）</span>
+          </div>
+          <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
+            <div style="background:#FFFFFF; padding:8px; border-radius:10px; border:1px solid #86EFAC; text-align:center;">
+              <img id="cloudQrImageViewOnly" alt="社員配布用QRコード" style="width:136px; height:136px; display:block;">
+              <div style="font-size:0.7rem; color:#166534; font-weight:bold; margin-top:4px;">社員スマホで読取</div>
+            </div>
+            <div style="flex:1; min-width:220px; display:flex; flex-direction:column; gap:8px;">
+              <div style="font-size:0.82rem; color:#166534; line-height:1.55;">
+                社員のスマホカメラでこのQRコードを読み取ってもらうと、<strong>全体工程表が安全に保護され、日別カレンダー・人工入力・作業日報が現場から使える現場アプリ</strong>が一発起動します！（ホーム画面に追加できます）
+              </div>
+              <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                <button type="button" class="btn" onclick="copyMobileHandoffUrl(true)" style="background:#15803D; color:#FFFFFF; font-weight:bold; padding:8px 14px;">👁️ 社員用URLをコピー（LINE等で送る）</button>
+              </div>
+              <input type="text" id="cloudHandoffUrlPreviewViewOnly" readonly class="internal-memo-input" style="width:100%; font-size:0.74rem; color:#166534; background:#F8FAFC;" onclick="this.select()">
             </div>
           </div>
         </div>
@@ -5044,9 +5059,7 @@
             const icon = ev.type === "delivery" ? "📦 納品" : (ev.type === "worker" ? "👷 職人" : "🚩 検査");
             const btnCls = ev.arranged ? "arranged" : "unarranged";
             const btnLabel = ev.arranged ? "🟢 手配・発注済" : "🔴 未手配（タップで済へ）";
-            const statusUi = isViewOnlyMode
-              ? `<span class="badge-pill ${ev.arranged ? 'badge-delivery' : 'badge-unarranged'}" style="padding:4px 8px; font-weight:bold;">${ev.arranged ? '🟢 手配済' : '🔴 未手配'}</span>`
-              : `<button type="button" class="status-toggle-btn ${btnCls}" onclick="toggleDayEventArranged(${idx})">${btnLabel}</button>
+            const statusUi = `<button type="button" class="status-toggle-btn ${btnCls}" onclick="toggleDayEventArranged(${idx})">${btnLabel}</button>
                  <button type="button" class="btn" style="padding:3px 7px; font-size:0.74rem; color:#DC2626;" onclick="removeDayEvent(${idx})">削除</button>`;
             return `
               <div class="event-row-item">
@@ -5065,7 +5078,7 @@
       const noteInput = document.getElementById("modalWorkNoteInput");
       if (noteInput) {
         noteInput.value = rec.workNote || "";
-        noteInput.readOnly = isViewOnlyMode;
+        noteInput.readOnly = false;
       }
 
       // 人工カウンター描画
@@ -5074,9 +5087,7 @@
         ninkuGrid.innerHTML = NINKU_ROLES.map(role => {
           const val = parseFloat(rec.ninku[role] || 0);
           const activeCls = val > 0 ? "active-ninku" : "";
-          const controlsHtml = isViewOnlyMode
-            ? `<span class="badge-pill" style="font-size:0.85rem; font-weight:bold; background:${val > 0 ? '#DCFCE7' : '#F1F5F9'}; color:${val > 0 ? '#15803D' : '#64748B'};">${val} 人工</span>`
-            : `<div class="ninku-controls">
+          const controlsHtml = `<div class="ninku-controls">
                 <button type="button" class="ninku-step-btn" onclick="stepModalNinku('${role}', -1.0)">-1</button>
                 <button type="button" class="ninku-step-btn" onclick="stepModalNinku('${role}', -0.5)">-0.5</button>
                 <span class="ninku-val-display">${val > 0 ? val : "0"}</span>
@@ -5169,6 +5180,83 @@
       renderCalendar();
     }
 
+    // 作業メモ用 音声入力トグル
+    let _speechRecognitionInstance = null;
+    let _isVoiceRecording = false;
+
+    function toggleVoiceInputForNote() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const btn = document.getElementById("btnVoiceInputNote");
+      const textarea = document.getElementById("modalWorkNoteInput");
+
+      if (!SpeechRecognition) {
+        alert("💡 キーボードの右下（または上部）にあるマイクマーク🎙️を押して話しかけると、音声入力できます！");
+        if (textarea) textarea.focus();
+        return;
+      }
+
+      if (_isVoiceRecording) {
+        if (_speechRecognitionInstance) {
+          try { _speechRecognitionInstance.stop(); } catch(e) {}
+        }
+        _isVoiceRecording = false;
+        if (btn) {
+          btn.style.background = "#10B981";
+          btn.innerHTML = "🎙️ 音声入力";
+        }
+        return;
+      }
+
+      try {
+        const recognition = new SpeechRecognition();
+        recognition.lang = "ja-JP";
+        recognition.interimResults = false;
+        recognition.continuous = false;
+
+        recognition.onstart = () => {
+          _isVoiceRecording = true;
+          if (btn) {
+            btn.style.background = "#DC2626";
+            btn.innerHTML = "🔴 聴取中...";
+          }
+          showToast("🎙️ お話しください（話し終えると自動入力されます）");
+        };
+
+        recognition.onresult = (event) => {
+          const transcript = event.results[0][0].transcript;
+          if (transcript && textarea) {
+            const current = textarea.value.trim();
+            textarea.value = current ? `${current}、${transcript}` : transcript;
+            onModalWorkNoteChange(textarea.value);
+            showToast(`🎙️「${transcript}」を入力しました！`);
+          }
+        };
+
+        recognition.onerror = (e) => {
+          console.warn("音声認識エラー:", e);
+          _isVoiceRecording = false;
+          if (btn) {
+            btn.style.background = "#10B981";
+            btn.innerHTML = "🎙️ 音声入力";
+          }
+        };
+
+        recognition.onend = () => {
+          _isVoiceRecording = false;
+          if (btn) {
+            btn.style.background = "#10B981";
+            btn.innerHTML = "🎙️ 音声入力";
+          }
+        };
+
+        _speechRecognitionInstance = recognition;
+        recognition.start();
+      } catch (err) {
+        console.warn("SpeechRecognition init error:", err);
+        if (textarea) textarea.focus();
+      }
+    }
+
     function onModalWorkNoteChange(val) {
       if (!activeModalYmd) return;
       const rec = ensureDailyRecord(activeModalYmd);
@@ -5225,10 +5313,8 @@
                   <div style="font-size:0.86rem; font-weight:bold; color:var(--text-main);">${escapeHtml(m.content)}</div>
                 </div>
                 <div style="display:flex; align-items:center; gap:6px;">
-                  ${isViewOnlyMode
-                    ? `<span class="badge-pill ${m.told ? 'badge-delivery' : 'badge-unarranged'}" style="padding:4px 8px; font-weight:bold;">${toldText}</span>`
-                    : `<button type="button" class="status-toggle-btn ${toldCls}" onclick="toggleMeetingTold('${m.id}')">${toldText}</button>
-                       <button type="button" class="btn" style="padding:3px 7px; font-size:0.74rem; color:#DC2626;" onclick="removeMeetingRecord('${m.id}')">削除</button>`}
+                  <button type="button" class="status-toggle-btn ${toldCls}" onclick="toggleMeetingTold('${m.id}')">${toldText}</button>
+                  ${!isViewOnlyMode ? `<button type="button" class="btn meeting-delete-btn" style="padding:3px 7px; font-size:0.74rem; color:#DC2626;" onclick="removeMeetingRecord('${m.id}')">削除</button>` : "" }
                 </div>
               </div>
             `;
@@ -5248,10 +5334,8 @@
                 <span style="font-size:1.1rem;">${ph.done ? '✅' : '⬜'}</span>
                 <span>${escapeHtml(ph.label)}</span>
               </div>
-              ${isViewOnlyMode
-                ? `<span class="badge-pill ${ph.done ? 'badge-delivery' : 'badge-unarranged'}" style="padding:4px 8px; font-weight:bold;">${btnLabel}</span>`
-                : `<button type="button" class="status-toggle-btn ${btnCls}" onclick="togglePhotoCheck('${ph.id}')">${btnLabel}</button>
-                   <button type="button" class="btn" style="padding:2px 6px; font-size:0.72rem; color:#94A3B8;" onclick="removePhotoCheck('${ph.id}')">×</button>`}
+              <button type="button" class="status-toggle-btn ${btnCls}" onclick="togglePhotoCheck('${ph.id}')">${btnLabel}</button>
+              ${!isViewOnlyMode ? `<button type="button" class="btn photo-delete-btn" style="padding:2px 6px; font-size:0.72rem; color:#94A3B8;" onclick="removePhotoCheck('${ph.id}')">×</button>` : "" }
             </div>
           `;
         }).join("");
@@ -5365,9 +5449,7 @@
                 <td style="white-space:nowrap;">${icon}</td>
                 <td style="font-weight:bold;">${escapeHtml(item.text)}</td>
                 <td style="width:160px;">
-                  ${isViewOnlyMode
-                    ? `<span class="badge-pill ${item.arranged ? 'badge-delivery' : 'badge-unarranged'}" style="padding:4px 8px; font-weight:bold;">${item.arranged ? '🟢 手配済' : '🔴 未手配'}</span>`
-                    : `<button type="button" class="status-toggle-btn ${btnCls}" onclick="toggleSummaryEventArranged('${item.ymd}', ${item.idx})">${btnLabel}</button>`}
+                  <button type="button" class="status-toggle-btn ${btnCls}" onclick="toggleSummaryEventArranged('${item.ymd}', ${item.idx})">${btnLabel}</button>
                 </td>
               </tr>
             `;
@@ -5872,7 +5954,6 @@
     }
 
     function saveState() {
-      if (isViewOnlyMode) return; // 閲覧専用モード時は端末・クラウド双方への書き込みを完全停止
       try {
         const state = getCurrentStateObject();
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -6965,7 +7046,12 @@
       const section = document.getElementById("cloudHandoffSection");
       const qrImg = document.getElementById("cloudQrImage");
       const urlPrev = document.getElementById("cloudHandoffUrlPreview");
-      const handoffUrl = getMobileHandoffUrl();
+      const handoffUrl = getMobileHandoffUrl(false);
+
+      const sectionView = document.getElementById("cloudHandoffSectionViewOnly");
+      const qrImgView = document.getElementById("cloudQrImageViewOnly");
+      const urlPrevView = document.getElementById("cloudHandoffUrlPreviewViewOnly");
+      const handoffUrlView = getMobileHandoffUrl(true);
 
       if (!section) return;
       if (handoffUrl && handoffUrl.startsWith("https://")) {
@@ -6974,8 +7060,16 @@
         if (qrImg) {
           qrImg.src = "https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=6&data=" + encodeURIComponent(handoffUrl);
         }
+        if (sectionView) {
+          sectionView.style.display = "block";
+          if (urlPrevView) urlPrevView.value = handoffUrlView;
+          if (qrImgView) {
+            qrImgView.src = "https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=6&data=" + encodeURIComponent(handoffUrlView);
+          }
+        }
       } else {
         section.style.display = "none";
+        if (sectionView) sectionView.style.display = "none";
       }
     }
 
@@ -7004,10 +7098,6 @@
 
     // Googleスプレッドシート側で先頭の0（例: "0157" ➔ 157）が数値変換された場合も自動で両方照合する通信ヘルパー
     async function postToGasCloud(gasUrl, payloadObj) {
-      if (isViewOnlyMode && payloadObj.action !== "loadAll") {
-        console.warn("閲覧専用モードのためクラウド書き込みをスキップしました");
-        return { ok: true, skipped: true };
-      }
       const rawPass = String(payloadObj.passcode || "").trim();
       const firstBody = Object.assign({}, payloadObj, { passcode: rawPass });
 
@@ -7168,16 +7258,68 @@
         }
       }
 
-      // 保存実行時に最新の現在時刻を付与して保存
-      const saveIso = new Date().toISOString();
-      currentProj.updatedAt = saveIso;
-      currentProj.state = getCurrentStateObject();
-      localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(projectsStore));
-
+      // 項目別スマート合体保存（上書き事故の完全防止）
       clearTimeout(autoSyncTimer);
-      setCloudStatusBadge("🟡 クラウド保存中...", "#D97706");
+      setCloudStatusBadge("🟡 クラウド保存・同期中...", "#D97706");
 
       try {
+        // 保存直前にクラウドの最新状態を取得してマージ
+        let remoteProj = null;
+        try {
+          const loadCheck = await postToGasCloud(cloudConfig.gasUrl, {
+            action: "loadAll",
+            passcode: cloudConfig.passcode || ""
+          });
+          if (loadCheck && loadCheck.ok && Array.isArray(loadCheck.projects)) {
+            remoteProj = loadCheck.projects.find(p => p && p.projectId === currentProjectId);
+          }
+        } catch(e) {}
+
+        const localState = getCurrentStateObject();
+        const mergedState = Object.assign({}, localState);
+
+        if (remoteProj && remoteProj.state) {
+          const rState = remoteProj.state;
+          if (isViewOnlyMode) {
+            // 社員スマホからの保存時：社長の全体工程表・現場基本設定は100%保持
+            mergedState.tasks = rState.tasks || localState.tasks;
+            mergedState.meta = rState.meta || localState.meta;
+            mergedState.baseYear = rState.baseYear || localState.baseYear;
+            mergedState.baseMonth = rState.baseMonth || localState.baseMonth;
+            mergedState.internalMemo = rState.internalMemo || localState.internalMemo;
+            // 日別カレンダー（人工・メモ・手配）は合体
+            mergedState.dailyRecords = Object.assign({}, rState.dailyRecords || {}, localState.dailyRecords || {});
+            // 写真チェックは合体
+            if (Array.isArray(rState.photoChecks)) {
+              mergedState.photoChecks = (localState.photoChecks || []).map(lp => {
+                const rp = rState.photoChecks.find(p => p.id === lp.id);
+                return (lp.done || (rp && rp.done)) ? Object.assign({}, rp || {}, lp, { done: true }) : lp;
+              });
+            }
+          } else {
+            // 社長PCからの保存時：現場社員が入れた本日の日別日報・人工・写真を安全に合体
+            if (rState.dailyRecords) {
+              const mergedDaily = Object.assign({}, rState.dailyRecords);
+              // 社長がアクティブに開いている日以外はリモートの最新を採用
+              Object.keys(localState.dailyRecords || {}).forEach(k => {
+                mergedDaily[k] = Object.assign({}, rState.dailyRecords[k] || {}, localState.dailyRecords[k]);
+              });
+              mergedState.dailyRecords = mergedDaily;
+            }
+            if (Array.isArray(rState.photoChecks)) {
+              mergedState.photoChecks = (localState.photoChecks || []).map(lp => {
+                const rp = rState.photoChecks.find(p => p.id === lp.id);
+                return (lp.done || (rp && rp.done)) ? Object.assign({}, rp || {}, lp, { done: true }) : lp;
+              });
+            }
+          }
+        }
+
+        const saveIso = new Date().toISOString();
+        currentProj.updatedAt = saveIso;
+        currentProj.state = mergedState;
+        localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(projectsStore));
+
         const data = await postToGasCloud(cloudConfig.gasUrl, {
           action: "saveProject",
           passcode: cloudConfig.passcode || "",
@@ -7239,26 +7381,10 @@
             judgeLine = "⚠️ 注意：💻 この端末にはまだクラウド保存していない変更があります！";
           }
 
-          // 手動で「🔄 最新読込」を押したとき、または起動・リロード時にデータ差分があるときは日時比較つき確認ポップアップを表示
-          if (isManualClick || (remoteJson && remoteJson !== localJson)) {
-            const applyOk = confirm(
-              `🔄 クラウドデータの読込確認\n` +
-              `【現場名】${projTitle}\n\n` +
-              `☁️ クラウドのデータ日時：${remoteDateStr}\n` +
-              `💻 この端末（本体）日時：${localDateStr}\n` +
-              `${judgeLine}\n\n` +
-              `クラウドのデータを画面に読み込みますか？\n` +
-              `・[OK] ＝ クラウドのデータを画面に反映する\n` +
-              `・[キャンセル] ＝ 今の本体の画面データをそのまま残す`
-            );
-            if (!applyOk) {
-              if (hasUnsavedCloudChanges) {
-                setUnsavedCloudChangesState(true);
-              } else {
-                setCloudStatusBadge("⚪ 端末データを表示中（手動保存待機）", "rgba(15, 23, 42, 0.45)");
-              }
-              return;
-            }
+          // 社員モード時および起動時の自動読込では確認ポップアップを完全撤廃（最新をスムーズに反映）
+          if (isManualClick && !isViewOnlyMode) {
+            const applyOk = confirm(`🔄 Googleスプレッドシートから最新データを読み込みますか？\n（手元の未保存変更がある場合は上書きされます）`);
+            if (!applyOk) return;
           }
 
           data.projects.forEach(rp => {

@@ -2640,7 +2640,7 @@
           <span class="view-only-indicator">👷 現場入力モード（全体工程保護中）</span>
           <span id="cloudSyncStatusBadge" class="cloud-status-pill editor-only-ctrl" onclick="openCloudSettingsModal()" style="cursor:pointer;">⚪ 端末保存（クラウド未設定）</span>
           <button type="button" class="btn-cloud editor-only-ctrl" onclick="copyMobileHandoffUrl(true)" style="background:#0F766E; border-color:#14B8A6;" title="社員配布用の『閲覧・印刷専用URL（編集ロック）』をクリップボードにコピーします">👁️ 社員用URLコピー</button>
-          <button type="button" id="btnCloudSaveMain" class="btn-cloud btn-cloud-solid" onclick="syncToCloudNow(true)" title="現在の現場データをGoogleスプレッドシートへ手動保存します（確認ポップアップが出ます）">☁️ クラウド保存</button>
+          <button type="button" id="btnCloudSaveMain" class="btn-cloud btn-cloud-solid" onclick="handleManualCloudSaveClick()" title="現在の現場データをGoogleスプレッドシートへ保存します">☁️ クラウド保存</button>
           <button type="button" class="btn-cloud" onclick="pullFromCloudNow(true)" title="Googleスプレッドシートから最新の現場データを読み込みます（確認ポップアップが出ます）">🔄 最新読込</button>
           <button type="button" class="btn-cloud btn-cloud-solid" onclick="openCloudSettingsModal()" title="Googleスプレッドシート連携・スマホQRコード・アプリアイコン設定を開きます">⚙️ アプリ・クラウド設定</button>
         </div>
@@ -2971,7 +2971,10 @@
           <h3 id="modalDateTitle">📅 2026年10月1日（木）</h3>
           <button type="button" class="btn" style="padding:4px 8px; font-size:0.76rem;" onclick="stepModalDay(1)">翌日 ▶</button>
         </div>
-        <button type="button" class="btn" style="background:transparent; color:#FFF; border-color:#FFF; padding:4px 10px;" onclick="closeDailyModal()">✕ 閉じる</button>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <button type="button" class="btn" style="background:#15803D; color:#FFF; border:none; padding:5px 12px; font-weight:bold; font-size:0.82rem; border-radius:6px; box-shadow:0 1px 3px rgba(0,0,0,0.25);" onclick="closeDailyModal()">☁️ 保存して閉じる</button>
+          <button type="button" class="btn" style="background:transparent; color:#FFF; border-color:rgba(255,255,255,0.7); padding:4px 8px; font-size:0.82rem;" onclick="closeDailyModal()">✕</button>
+        </div>
       </div>
 
       <div class="daily-modal-body">
@@ -3049,6 +3052,12 @@
             <span id="modalDayNinkuTotal" style="font-size:0.9rem; color:var(--brand-green-dark);">当日合計：0 人工</span>
           </div>
           <div class="ninku-grid" id="modalNinkuGrid"></div>
+        </div>
+
+        <!-- モーダル最下部の保存・完了アクションバー -->
+        <div style="margin-top:14px; padding-top:10px; border-top:1px dashed var(--border-color); display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+          <span style="font-size:0.75rem; color:var(--text-sub);">💡 閉じる（または画面外をタップする）と、自動でGoogleスプレッドシートへ保存されます。</span>
+          <button type="button" class="btn" style="background:#15803D; color:#FFF; border:none; padding:8px 18px; font-weight:bold; font-size:0.9rem; border-radius:6px; box-shadow:0 2px 5px rgba(21,128,61,0.3); margin-left:auto;" onclick="closeDailyModal()">☁️ 現場日報・人工を保存して閉じる</button>
         </div>
       </div>
     </div>
@@ -5005,11 +5014,16 @@
       if (backdrop) backdrop.classList.add("open");
     }
 
-    function closeDailyModal() {
+    async function closeDailyModal() {
       const backdrop = document.getElementById("dailyModalBackdrop");
       if (backdrop) backdrop.classList.remove("open");
       renderCalendar();
       if (activeMainTab === "summary") renderSummaryAndLine();
+
+      // 日別カレンダー（人工・作業メモ・納品手配等）に変更があれば自動でクラウド保存
+      if (hasUnsavedCloudChanges && cloudConfig.gasUrl) {
+        await syncToCloudNow(false);
+      }
     }
 
     function onModalBackdropClick(e) {
@@ -5018,7 +5032,11 @@
       }
     }
 
-    function stepModalDay(delta) {
+    async function stepModalDay(delta) {
+      // 日付を移動する前に未保存変更があればバックグラウンド保存
+      if (hasUnsavedCloudChanges && cloudConfig.gasUrl) {
+        syncToCloudNow(false);
+      }
       const d = parseDateLocal(activeModalYmd);
       if (!d) return;
       d.setDate(d.getDate() + delta);
@@ -5376,6 +5394,9 @@
       target.told = !target.told;
       saveState();
       renderMeetingsAndPhotos();
+      if (isViewOnlyMode && cloudConfig.gasUrl) {
+        syncToCloudNow(false);
+      }
     }
 
     function removeMeetingRecord(id) {
@@ -5392,6 +5413,9 @@
       target.date = target.done ? formatShortMD(formatYMD(new Date())) : "";
       saveState();
       renderMeetingsAndPhotos();
+      if (isViewOnlyMode && cloudConfig.gasUrl) {
+        syncToCloudNow(false);
+      }
     }
 
     function addCustomPhotoCheck() {
@@ -7202,6 +7226,11 @@
       }
     }
 
+    function handleManualCloudSaveClick() {
+      // 社員モード時は確認ポップアップを出さずに即座にクラウド保存
+      syncToCloudNow(!isViewOnlyMode);
+    }
+
     async function syncToCloudNow(askConfirm) {
       if (!cloudConfig.gasUrl) {
         openCloudSettingsModal();
@@ -7296,6 +7325,19 @@
                 return (lp.done || (rp && rp.done)) ? Object.assign({}, rp || {}, lp, { done: true }) : lp;
               });
             }
+            // 打合せメモ合体（職人への伝達状況を安全に合体）
+            if (Array.isArray(rState.meetings)) {
+              const rMeetingMap = new Map((rState.meetings || []).map(m => [m.id, m]));
+              (localState.meetings || []).forEach(lm => {
+                const rm = rMeetingMap.get(lm.id);
+                if (rm) {
+                  if (lm.told) rm.told = true;
+                } else {
+                  rMeetingMap.set(lm.id, lm);
+                }
+              });
+              mergedState.meetings = Array.from(rMeetingMap.values());
+            }
           } else {
             // 社長PCからの保存時：現場社員が入れた本日の日別日報・人工・写真を安全に合体
             if (rState.dailyRecords) {
@@ -7333,7 +7375,11 @@
         setUnsavedCloudChangesState(false);
         const nowStr = new Date().toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
         setCloudStatusBadge(`🟢 クラウド保存済 (${nowStr})`, "#15803D");
-        showToast(`☁️「${projTitle}」をGoogleスプレッドシートへ保存しました！`);
+        if (isViewOnlyMode) {
+          showToast(`☁️「${projTitle}」現場日報・人工をクラウドへ保存しました！`);
+        } else {
+          showToast(`☁️「${projTitle}」をGoogleスプレッドシートへ保存しました！`);
+        }
       } catch (err) {
         console.warn("クラウド保存エラー:", err);
         setCloudStatusBadge("🔴 クラウド通信エラー（端末には保存済）", "#DC2626");
